@@ -78,6 +78,11 @@ module.exports.updateDronePos = function(){
   // pending
 }
 
+// Add flight path
+module.exports.addFlightPath = function(){
+  
+}
+
 //
 module.exports.isDronePathConflict = function(drone){
   // pending
