@@ -238,14 +238,22 @@ ALTER TABLE restriction_exception ADD CONSTRAINT restriction_exception_edited_pa
 
 
 
-
-
-
+-- adds 3D point for home geometry on drone table
 SELECT AddGeometryColumn('drone', 'home_geom', 4326, 'POINT', 3, false);
+
+-- adds buffered geometry for parcel to test drone movements against
 SELECT AddGeometryColumn('owned_parcel', 'buffered_geom', 4326, 'MULTIPOLYGON', 3, false);
+
+-- landing zone as dictated by the pilot
 SELECT AddGeometryColumn('landing_zone', 'zone_geom', 4326, 'POLYGON', 3, false);
+
+-- position updates of the drone
 SELECT AddGeometryColumn('drone_position', 'position_geom', 4326, 'POINT', 3, false);
+
+-- flight path suggested by drone pilot and accepted by planner
 SELECT AddGeometryColumn('flight_path', 'path_geom', 4326, 'LINESTRING', 3, false);
+
+-- flight path buffered will be created server side after the flight path has been accepted by the server side 
 SELECT AddGeometryColumn('flight_path_buffered', 'buffered_geom', 4326, 'POLYGON', 3, false);
 
 
