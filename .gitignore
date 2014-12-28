@@ -6,3 +6,4 @@ db_config.txt
 /db/.bowerrc
 createTestDB.sh
 Create_Drone_Pass_Test_DB.sql
+testData/
