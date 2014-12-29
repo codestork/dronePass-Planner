@@ -1,92 +1,121 @@
-var db = require('./config.js');
+var pg = require('./config.js');
+var st = require('knex-postgis')(pg);
 
-// These are the postgis database queries
-
-//
-module.exports.getGeoJSONFromGid = function(gid){
-  return knex.select(st.asGeoJSON('geom'))
-  .from('parcel').where('gid',gid).toString();
+/**
+* input: gid
+* output: geometry
+*/
+var getGeoJSONFromGid = function(gid){
+  return pg.select(st.asGeoJSON('geom'))
+  .from('alamedacountywgs84').where('gid',gid);
 }
 
 // Client gives parcel# from local county accessor
-module.exports.getGidFromParcelID = function(parcel_gid){
-  return knex.select('gid')
-  .from('parcel').where('parcel_gid',parcel_gid).toString();
+/**
+* input: parcel_gid
+* output: gid
+*/
+var getGidFromParcelID = function(parcel_gid){
+  return pg.select('gid')
+  .from('parcel').where('parcel_gid',parcel_gid);
 }
 
-// Gets Gid from coordinates (don't know of a good way to do it yet)
-// Can try geometry dump, then search through it
-module.exports.getGidFromCoor = function(long, lat){
-  // pending
+/**
+* input: long, lat
+* output: gid of intersecting parcels
+*/
+var getGidFromCoor = function(long, lat){
+  return pg.select('gid')
+  .from('alamedacountywgs84')
+  .whereRaw("ST_Intersects(ST_GeographyFromText('SRID=4326;POINT("+long+" "+lat+")'), geom)");
 }
 
-module.exports.setParcelRestriction = function(parcel, start_time, duration){
-  return knex('restriction')
+/**
+* input: parcel, start_time, duration
+* 
+*/
+var setParcelRestriction = function(parcel, start_time, duration){
+  return pg('restriction')
   .insert({
     owned_parcel_gid: parcel.gid,
     start_time: start_time,
     duration: duration
-  }).toString();
+  });
 }
 
-// add new land owner
-module.exports.addLandOwner = function(login, owner_authority){
-  return knex('land_owner')
+/**
+*
+*
+*/
+var addLandOwner = function(login, owner_authority){
+  return pg('land_owner')
   .insert({login: login,
     owner_authority: owner_authority
-  }).toString();
+  });
 }
 
 // add parcel to land owner
-module.exports.addParcelToOwner = function(land_owner, parcel, restriction_height){
-  return knex('owned_parcel')
+var addParcelToOwner = function(land_owner, parcel, restriction_height){
+  return pg('owned_parcel')
   .insert({
     land_owner_id: land_owner,
     parcel_gid: parcel.gid,
     buffered_geom: parcel.lot_geom,
     restriction_height: restriction_height,
     srid: parcel.srid
-  }).toString();
+  });
 }
 
 // Give home as point in GeoJSON
 // type is a String
 // max_velocity is an Integer
-module.exports.addDrone = function(home, type, max_vel){
-  return knex('drone')
+var addDrone = function(home, type, max_vel){
+  return pg('drone')
   .insert({
     home_geom: st.geomFromGeoJSON(home),
     drone_type: type,
     max_velocity: max_vel
-  })
+  });
 }
 
 // Should probably only be used once after adding Drone
 // initiates heading as 0
-module.exports.initDronePos = function(drone){
+var initDronePos = function(drone){
   var date = new Date;
-  return knex('drone_position')
+  return pg('drone_position')
   .insert({
     drone_id: drone.gid,
     position_geom: drone.home_geom,
     epoch: date
-  })
+  });
 }
 
 // Updates drone position in DB
-module.exports.updateDronePos = function(){
+var updateDronePos = function(){
   // pending
 }
 
 // Add flight path
-module.exports.addFlightPath = function(){
+var addFlightPath = function(){
   
 }
 
 //
-module.exports.isDronePathConflict = function(drone){
+var isDronePathConflict = function(drone){
   // pending
 
   // get flight path & start time
   // @ max_velocity will drone pos be w/in restricted area
 }
+
+module.exports.getGeoJSONFromGid = getGeoJSONFromGid;
+module.exports.getGidFromParcelID = getGidFromParcelID;
+module.exports.getGidFromCoor = getGidFromCoor;
+module.exports.setParcelRestriction = setParcelRestriction;
+module.exports.addLandOwner = addLandOwner;
+module.exports.addParcelToOwner = addParcelToOwner;
+module.exports.addDrone = addDrone;
+module.exports.initDronePos = initDronePos;
+module.exports.updateDronePos = updateDronePos;
+module.exports.addFlightPath = addFlightPath;
+module.exports.isDronePathConflict = isDronePathConflict;
