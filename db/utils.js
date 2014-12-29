@@ -5,28 +5,19 @@ var st = require('knex-postgis')(pg);
 * input: gid
 * output: geometry
 */
-var getGeoJSONFromGid = function(gid){
+var getGeoJSONFromGid = function(gid, table){
   return pg.select(st.asGeoJSON('geom'))
-  .from('alamedacountywgs84').where('gid',gid);
-}
-
-// Client gives parcel# from local county accessor
-/**
-* input: parcel_gid
-* output: gid
-*/
-var getGidFromParcelID = function(parcel_gid){
-  return pg.select('gid')
-  .from('parcel').where('parcel_gid',parcel_gid);
+  .from(table || 'parcel')
+  .where('gid',gid);
 }
 
 /**
 * input: long, lat
 * output: gid of intersecting parcels
 */
-var getGidFromCoor = function(long, lat){
+var getGidFromCoor = function(long, lat, table){
   return pg.select('gid')
-  .from('alamedacountywgs84')
+  .from(table || 'parcel')
   .whereRaw("ST_Intersects(ST_GeographyFromText('SRID=4326;POINT("+long+" "+lat+")'), geom)");
 }
 
@@ -49,7 +40,8 @@ var setParcelRestriction = function(parcel, start_time, duration){
 */
 var addLandOwner = function(login, owner_authority){
   return pg('land_owner')
-  .insert({login: login,
+  .insert({
+    login: login,
     owner_authority: owner_authority
   });
 }
