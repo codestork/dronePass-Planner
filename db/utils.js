@@ -2,6 +2,16 @@ var pg = require('./config.js');
 var st = require('knex-postgis')(pg);
 
 /**
+* All of the utility functions return a knex query
+* 
+* example w/ promise:
+* getParcelGid(x,y,table).then(func).then(func);
+*
+* example w/ callback:
+* getParcelGid(x,y,table).exec(callback);
+*/
+
+/**
 * input: gid
 * output: geometry
 */
