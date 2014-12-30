@@ -1,6 +1,0 @@
-var pg = require('pg');
-// var connString = 'postgres://username:password@address/database';
-var knex = require('knex')({
-  dialect: 'postgres'
-});
-var st = require('knex-postgis')(knex);
