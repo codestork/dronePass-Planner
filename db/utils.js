@@ -74,9 +74,9 @@ var addDrone = function(home, type, max_vel){
   });
 }
 
-module.exports.getGeoJSONFromGid = getGeoJSONFromGid;
-module.exports.getGidFromCoor = getGidFromCoor;
-module.exports.setParcelRestriction = setParcelRestriction;
+module.exports.getParcelGeometry = getParcelGeometry;
+module.exports.getParcelGid = getParcelGid;
+module.exports.setRestriction = setRestriction;
 module.exports.addLandOwner = addLandOwner;
-module.exports.addParcelToOwner = addParcelToOwner;
+module.exports.addOwnedParcel = addOwnedParcel;
 module.exports.addDrone = addDrone;
