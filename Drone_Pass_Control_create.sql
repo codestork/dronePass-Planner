@@ -118,7 +118,7 @@ CREATE TABLE owned_parcel (
 
 
 
----- Table: parcel_wgs84
+---- Table: 8
 --CREATE TABLE parcel_wgs84 (
 --    gid int  NOT NULL,
 --    lot_geom geometry(POLYGON)  NOT NULL,
@@ -229,12 +229,12 @@ ALTER TABLE landing_zone ADD CONSTRAINT landing_zone_owned_parcel
 -- Reference:  parcel_wgs84_parcel (table: parcel_wgs84)
 
 
-ALTER TABLE parcel_wgs84 ADD CONSTRAINT parcel_wgs84_parcel 
-    FOREIGN KEY (parcel_gid)
-    REFERENCES parcel (gid)
-    NOT DEFERRABLE 
-    INITIALLY IMMEDIATE 
-;
+-- ALTER TABLE parcel_wgs84 ADD CONSTRAINT parcel_wgs84_parcel 
+--     FOREIGN KEY (parcel_gid)
+--     REFERENCES parcel (gid)
+--     NOT DEFERRABLE 
+--     INITIALLY IMMEDIATE 
+-- ;
 
 -- Reference:  restriction_edited_parcel (table: restriction)
 
