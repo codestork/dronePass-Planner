@@ -98,13 +98,23 @@ CREATE TABLE owned_parcel (
 
 
 -- Table: parcel
--- CREATE TABLE parcel (
---     gid int  NOT NULL,
---     lot_geom geometry(POLYGON)  NOT NULL,
---     srid int  NOT NULL DEFAULT 0,
---     height int  NULL,
---     CONSTRAINT parcel_pk PRIMARY KEY (gid)
--- );
+--CREATE TABLE parcel (
+--    gid int  NOT NULL,
+--    lot_geom geometry(POLYGON)  NOT NULL,
+--    srid int  NOT NULL DEFAULT 0,
+--    height int  NULL,
+--    CONSTRAINT parcel_pk PRIMARY KEY (gid)
+--);
+
+
+
+-- Table: parcel_web_mercator
+--CREATE TABLE parcel_web_mercator (
+--    gid int  NOT NULL,
+--    lot_geom geometry(POLYGON)  NOT NULL,
+--    parcel_gid int  NOT NULL,
+--    CONSTRAINT parcel_web_mercator_pk PRIMARY KEY (gid)
+--);
 
 
 
@@ -206,6 +216,16 @@ ALTER TABLE landing_zone ADD CONSTRAINT landing_zone_owned_parcel
     INITIALLY IMMEDIATE 
 ;
 
+-- Reference:  parcel_web_mercator_parcel (table: parcel_web_mercator)
+
+
+ALTER TABLE parcel_web_mercator ADD CONSTRAINT parcel_web_mercator_parcel 
+    FOREIGN KEY (parcel_gid)
+    REFERENCES parcel (gid)
+    NOT DEFERRABLE 
+    INITIALLY IMMEDIATE 
+;
+
 -- Reference:  restriction_edited_parcel (table: restriction)
 
 
@@ -239,22 +259,22 @@ ALTER TABLE restriction_exception ADD CONSTRAINT restriction_exception_edited_pa
 
 
 -- adds 3D point for home geometry on drone table
-SELECT AddGeometryColumn('drone', 'home_geom', 4326, 'POINT', 3, false);
+SELECT AddGeometryColumn('drone', 'home_geom', 102243, 'POINT', 3, false);
 
 -- adds buffered geometry for parcel to test drone movements against
-SELECT AddGeometryColumn('owned_parcel', 'buffered_geom', 4326, 'MULTIPOLYGON', 3, false);
+SELECT AddGeometryColumn('owned_parcel', 'buffered_geom', 102243, 'MULTIPOLYGON', 3, false);
 
 -- landing zone as dictated by the pilot
-SELECT AddGeometryColumn('landing_zone', 'zone_geom', 4326, 'POLYGON', 3, false);
+SELECT AddGeometryColumn('landing_zone', 'zone_geom', 102243, 'POLYGON', 3, false);
 
 -- position updates of the drone
-SELECT AddGeometryColumn('drone_position', 'position_geom', 4326, 'POINT', 3, false);
+SELECT AddGeometryColumn('drone_position', 'position_geom', 102243, 'POINT', 3, false);
 
 -- flight path suggested by drone pilot and accepted by planner
-SELECT AddGeometryColumn('flight_path', 'path_geom', 4326, 'LINESTRING', 3, false);
+SELECT AddGeometryColumn('flight_path', 'path_geom', 102243, 'LINESTRING', 3, false);
 
 -- flight path buffered will be created server side after the flight path has been accepted by the server side 
-SELECT AddGeometryColumn('flight_path_buffered', 'buffered_geom', 4326, 'POLYGON', 3, false);
+SELECT AddGeometryColumn('flight_path_buffered', 'buffered_geom', 102243, 'POLYGON', 3, false);
 
 
 -- End of file.
