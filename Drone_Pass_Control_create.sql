@@ -272,7 +272,7 @@ ALTER TABLE restriction_exception ADD CONSTRAINT restriction_exception_edited_pa
 SELECT AddGeometryColumn('drone', 'home_geom', 102243, 'POINT', 3, false);
 
 -- adds buffered geometry for parcel to test drone movements against
-SELECT AddGeometryColumn('owned_parcel', 'buffered_geom', 102243, 'MULTIPOLYGON', 3, false);
+SELECT AddGeometryColumn('owned_parcel', 'hull_geom', 102243, 'MULTIPOLYGON', 3, false);
 
 -- landing zone as dictated by the pilot
 SELECT AddGeometryColumn('landing_zone', 'zone_geom', 102243, 'POLYGON', 3, false);
