@@ -11,9 +11,13 @@ var st = require('knex-postgis')(pg);
 * getParcelGid(x,y,table).exec(callback);
 */
 
+//*************************************************************************
+//        GENERAL QUERIES
+//*************************************************************************
+
 /**
-* input: gid
-* output: geometry
+* input: gid, table
+* output: knex query that selects Geometry of provided gid in provided table
 */
 var getParcelGeometry = function(gid, table){
   return pg.select(st.asGeoJSON('geom'))
@@ -21,9 +25,11 @@ var getParcelGeometry = function(gid, table){
   .where('gid',gid);
 }
 
+
 /**
 * input: long, lat
-* output: gid of intersecting parcels
+* output: knex query that selects gid of Parcel that intersects with provided long lat point
+*         by geography calculations (slow, exact)
 */
 var getParcelGid = function(longitude, latitude){
   var longitude=-122.023036, latitude=37.634351;
@@ -31,32 +37,47 @@ var getParcelGid = function(longitude, latitude){
   .from('parcel_wgs84')
   .whereRaw("ST_Intersects(ST_GeographyFromText('SRID=4326;POINT("+longitude+" "+latitude+")'), lot_geom)");
 }
-var d1 = new Date;
-getParcelGid(-122.023036, 37.634351).then(function(r){
-  d1d = new Date;
-  console.log(r);
-  console.log('geog',(d1d-d1)+'ms');
-});
+// var d1 = new Date;
+// getParcelGid(-122.023036, 37.634351).then(function(r){
+//   d1d = new Date;
+//   console.log(r);
+//   console.log('geog',(d1d-d1)+'ms');
+// });
+
 
 /**
 * input: long, lat
-* output: gid of parcel with point
+* output: knex query that selects gid of Parcel that intersects with provided long lat point
+*         by geometry calculations (fast, estimate)
 */
 var getParcelGidByContains = function(longitude, latitude){
   return pg.select('gid')
   .from('parcel')
   .whereRaw("ST_Contains(ST_SetSRID(lot_geom, 102243), ST_Transform(ST_GeometryFromText('POINT("+longitude+" "+latitude+")',4326), 102243))");
 }
-var d2 = new Date;
-getParcelGidByContains(-122.023036, 37.634351).then(function(r){
-  d2d = new Date;
-  console.log(r);
-  console.log('geom',(d2d-d2)+'ms');
-});
+// var d2 = new Date;
+// getParcelGidByContains(-122.023036, 37.634351).then(function(r){
+//   d2d = new Date;
+//   console.log(r);
+//   console.log('geom',(d2d-d2)+'ms');
+// });
+
+
+
+
+
+
+
+
+
+
+//*************************************************************************
+//        CLIENT SPECIFIC
+//*************************************************************************
 
 /**
 * input: parcel, start_time, duration
-* 
+* output:
 */
 var setRestriction = function(parcel, start_time, duration){
   return pg('restriction')
@@ -66,6 +87,7 @@ var setRestriction = function(parcel, start_time, duration){
     duration: duration
   });
 }
+
 
 /**
 *
@@ -78,6 +100,7 @@ var addLandOwner = function(login, owner_authority){
     owner_authority: owner_authority
   });
 }
+
 
 /**
 *
@@ -94,25 +117,56 @@ var addOwnedParcel = function(land_owner, parcel, restriction_height){
   });
 }
 
+
+
+
+
+
+
+
+
+
+//*************************************************************************
+//        DRONE SPECIFIC
+//*************************************************************************
+
 /**
-* input:  home (GeoJSON point)
-*         drone type
+* input:  drone type
 *         max velocity
-*
-* output: query that returns a promise
+* output: knex query that inserts a row to drone table
 */
-var addDrone = function(home, type, max_vel){
+var addDrone = function(type, max_vel){
   return pg('drone')
   .insert({
-    home_geom: st.geomFromGeoJSON(home),
     drone_type: type,
     max_velocity: max_vel
   });
 }
 
+/**
+* input: plan ()
+*
+*/
+var isFlightPlanConflict = function(plan){
+
+}
+
+
+
+
+
+
+
+
+
+
+
+// General
 module.exports.getParcelGeometry = getParcelGeometry;
 module.exports.getParcelGid = getParcelGid;
+// Client
 module.exports.setRestriction = setRestriction;
 module.exports.addLandOwner = addLandOwner;
 module.exports.addOwnedParcel = addOwnedParcel;
+// Drone
 module.exports.addDrone = addDrone;
