@@ -1,12 +1,22 @@
 -- Created by Vertabelo (http://vertabelo.com)
 -- Script type: create
 -- Scope: [tables, references, sequences, views, procedures]
--- Generated at Tue Dec 23 01:25:09 UTC 2014
+-- Generated at Wed Dec 31 00:37:45 UTC 2014
 
 
 
 
 -- tables
+-- Table: assessor_parcel_data
+-- CREATE TABLE assessor_parcel_data (
+--     id int  NOT NULL,
+--     address_geom geometry(POINT)  NOT NULL,
+--     APN varchar(64)  NOT NULL,
+--     CONSTRAINT assessor_parcel_data_pk PRIMARY KEY (id)
+-- );
+
+
+
 -- Table: drone
 CREATE TABLE drone (
     gid int  NOT NULL,
@@ -89,7 +99,7 @@ CREATE TABLE owned_parcel (
     gid int  NOT NULL,
     land_owner_id int  NOT NULL,
     parcel_gid int  NOT NULL,
-    -- buffered_geom geometry(POLYGON)  NOT NULL,
+    -- hull_geom geometry(POLYGON)  NOT NULL,
     restriction_height int  NOT NULL,
     srid int  NOT NULL,
     CONSTRAINT owned_parcel_pk PRIMARY KEY (gid)
@@ -108,12 +118,12 @@ CREATE TABLE owned_parcel (
 
 
 
--- Table: parcel_web_mercator
---CREATE TABLE parcel_web_mercator (
+---- Table: 8
+--CREATE TABLE parcel_wgs84 (
 --    gid int  NOT NULL,
 --    lot_geom geometry(POLYGON)  NOT NULL,
 --    parcel_gid int  NOT NULL,
---    CONSTRAINT parcel_web_mercator_pk PRIMARY KEY (gid)
+--    CONSTRAINT parcel_wgs84_pk PRIMARY KEY (gid)
 --);
 
 
@@ -216,15 +226,15 @@ ALTER TABLE landing_zone ADD CONSTRAINT landing_zone_owned_parcel
     INITIALLY IMMEDIATE 
 ;
 
--- Reference:  parcel_web_mercator_parcel (table: parcel_web_mercator)
+-- Reference:  parcel_wgs84_parcel (table: parcel_wgs84)
 
 
-ALTER TABLE parcel_web_mercator ADD CONSTRAINT parcel_web_mercator_parcel 
-    FOREIGN KEY (parcel_gid)
-    REFERENCES parcel (gid)
-    NOT DEFERRABLE 
-    INITIALLY IMMEDIATE 
-;
+-- ALTER TABLE parcel_wgs84 ADD CONSTRAINT parcel_wgs84_parcel 
+--     FOREIGN KEY (parcel_gid)
+--     REFERENCES parcel (gid)
+--     NOT DEFERRABLE 
+--     INITIALLY IMMEDIATE 
+-- ;
 
 -- Reference:  restriction_edited_parcel (table: restriction)
 
