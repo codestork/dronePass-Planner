@@ -1,2 +1,9 @@
 node_modules/
-db_config.txt
+/db/config.js
+/db/bower*
+/db/index.html
+/db/spec/
+/db/.bowerrc
+createTestDB.sh
+Create_Drone_Pass_Test_DB.sql
+testData/
