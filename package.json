@@ -34,6 +34,7 @@
     "knex": "^0.7.3",
     "knex-postgis": "^0.1.2",
     "morgan": "^1.5.0",
+    "pg": "^4.1.1",
     "request": "^2.51.0"
   },
   "devDependencies": {
