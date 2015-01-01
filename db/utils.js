@@ -31,7 +31,7 @@ var getParcelGeometry = function(gid, table){
 * output: knex query that selects gid of Parcel that intersects with provided long lat point
 *         by geography calculations (slow, exact)
 */
-var getParcelGid = function(longitude, latitude){
+var getParcelGidByGeography = function(longitude, latitude){
   var longitude=-122.023036, latitude=37.634351;
   return pg.select('gid')
   .from('parcel_wgs84')
@@ -50,7 +50,7 @@ var getParcelGid = function(longitude, latitude){
 * output: knex query that selects gid of Parcel that intersects with provided long lat point
 *         by geometry calculations (fast, estimate)
 */
-var getParcelGidByContains = function(longitude, latitude){
+var getParcelGid = function(longitude, latitude){
   return pg.select('gid')
   .from('parcel')
   .whereRaw("ST_Contains(ST_SetSRID(lot_geom, 102243), ST_Transform(ST_GeometryFromText('POINT("+longitude+" "+latitude+")',4326), 102243))");
