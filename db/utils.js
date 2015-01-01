@@ -144,12 +144,11 @@ var addDrone = function(type, max_vel){
 }
 
 /**
-* input: plan ()
-*
+* input: plan (line string)
+* output: knex query that checks if string intersects with restricted
+*         properties
 */
-var isFlightPlanConflict = function(plan){
-
-}
+// var isFlightPlanConflictFree = function(plan){}
 
 
 
