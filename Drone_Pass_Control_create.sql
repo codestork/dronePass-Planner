@@ -1,29 +1,20 @@
 -- Created by Vertabelo (http://vertabelo.com)
 -- Script type: create
 -- Scope: [tables, references, sequences, views, procedures]
--- Generated at Wed Dec 31 00:37:45 UTC 2014
+-- Generated at Fri Jan 02 02:49:20 UTC 2015
 
+-- CREATE DATABASE dronePassTestDB;
+-- GRANT ALL PRIVILEGES ON DATABASE dronePassTestDB to davidraleigh
 
 
 
 -- tables
--- Table: assessor_parcel_data
--- CREATE TABLE assessor_parcel_data (
---     id int  NOT NULL,
---     address_geom geometry(POINT)  NOT NULL,
---     APN varchar(64)  NOT NULL,
---     CONSTRAINT assessor_parcel_data_pk PRIMARY KEY (id)
--- );
-
-
-
 -- Table: drone
 CREATE TABLE drone (
-    gid int  NOT NULL,
-    -- home_geom geom(POINT)  NOT NULL,
+    id int  NOT NULL,
     drone_type char(64)  NOT NULL,
     max_velocity int  NOT NULL,
-    CONSTRAINT drone_pk PRIMARY KEY (gid)
+    CONSTRAINT drone_pk PRIMARY KEY (id)
 );
 
 
@@ -31,6 +22,7 @@ CREATE TABLE drone (
 -- Table: drone_operator
 CREATE TABLE drone_operator (
     id int  NOT NULL,
+    opeartor_name varchar(128)  NULL,
     CONSTRAINT drone_operator_pk PRIMARY KEY (id)
 );
 
@@ -41,11 +33,8 @@ CREATE TABLE drone_position (
     gid int  NOT NULL,
     drone_id int  NOT NULL,
     -- position_geom geometry(POINT)  NOT NULL,
-    heading int  NOT NULL,
-    epoch date  NOT NULL,
-    n_dx int  NOT NULL,
-    e_dx int  NOT NULL,
-    u_dx int  NOT NULL,
+    heading int  NULL CHECK (heading > -1 AND heading < 360),
+    epoch timestamp  NOT NULL,
     CONSTRAINT drone_position_pk PRIMARY KEY (gid)
 );
 
@@ -57,8 +46,8 @@ CREATE TABLE flight_path (
     drone_id int  NOT NULL,
     drone_operator_id int  NOT NULL,
     -- path_geom geometry(LINESTRING)  NOT NULL,
-    start_time date  NOT NULL,
-    duration interval  NOT NULL,
+    flight_start timestamp  NOT NULL DEFAULT -infinity CHECK (flight_start < flight_end),
+    flight_end timestamp  NOT NULL DEFAULT infinity CHECK (flight_start < flight_end),
     CONSTRAINT flight_path_pk PRIMARY KEY (id)
 );
 
@@ -100,8 +89,9 @@ CREATE TABLE owned_parcel (
     land_owner_id int  NOT NULL,
     parcel_gid int  NOT NULL,
     -- hull_geom geometry(POLYGON)  NOT NULL,
-    restriction_height int  NOT NULL,
-    srid int  NOT NULL,
+    restriction_height int  NULL,
+    restriction_start time  NULL,
+    restriction_end time  NULL,
     CONSTRAINT owned_parcel_pk PRIMARY KEY (gid)
 );
 
@@ -111,31 +101,21 @@ CREATE TABLE owned_parcel (
 --CREATE TABLE parcel (
 --    gid int  NOT NULL,
 --    lot_geom geometry(POLYGON)  NOT NULL,
---    srid int  NOT NULL DEFAULT 0,
 --    height int  NULL,
+--    APN varchar(64)  NOT NULL,
 --    CONSTRAINT parcel_pk PRIMARY KEY (gid)
 --);
 
 
 
----- Table: 8
+-- Table: parcel_wgs84
 --CREATE TABLE parcel_wgs84 (
 --    gid int  NOT NULL,
 --    lot_geom geometry(POLYGON)  NOT NULL,
 --    parcel_gid int  NOT NULL,
+--    APN varchar(64)  NOT NULL,
 --    CONSTRAINT parcel_wgs84_pk PRIMARY KEY (gid)
 --);
-
-
-
--- Table: restriction
-CREATE TABLE restriction (
-    id int  NOT NULL,
-    owned_parcel_gid int  NOT NULL,
-    start_time date  NOT NULL,
-    duration interval  NOT NULL,
-    CONSTRAINT restriction_pk PRIMARY KEY (id)
-);
 
 
 
@@ -144,8 +124,8 @@ CREATE TABLE restriction_exception (
     id int  NOT NULL,
     drone_id int  NOT NULL,
     owned_parcel_gid int  NOT NULL,
-    start_time date  NOT NULL,
-    duration interval  NOT NULL,
+    exception_start timestamp  NOT NULL DEFAULT -infinity CHECK (exception_start < exception_end),
+    exception_end timestamp  NOT NULL DEFAULT infinity CHECK (exception_start < exception_end),
     CONSTRAINT restriction_exception_pk PRIMARY KEY (id)
 );
 
@@ -161,7 +141,7 @@ CREATE TABLE restriction_exception (
 
 ALTER TABLE drone_position ADD CONSTRAINT drone_movement_drone 
     FOREIGN KEY (drone_id)
-    REFERENCES drone (gid)
+    REFERENCES drone (id)
     NOT DEFERRABLE 
     INITIALLY IMMEDIATE 
 ;
@@ -201,7 +181,7 @@ ALTER TABLE flight_path_buffered ADD CONSTRAINT flight_path_buffered_flight_path
 
 ALTER TABLE flight_path ADD CONSTRAINT flight_path_drone 
     FOREIGN KEY (drone_id)
-    REFERENCES drone (gid)
+    REFERENCES drone (id)
     NOT DEFERRABLE 
     INITIALLY IMMEDIATE 
 ;
@@ -229,29 +209,19 @@ ALTER TABLE landing_zone ADD CONSTRAINT landing_zone_owned_parcel
 -- Reference:  parcel_wgs84_parcel (table: parcel_wgs84)
 
 
--- ALTER TABLE parcel_wgs84 ADD CONSTRAINT parcel_wgs84_parcel 
---     FOREIGN KEY (parcel_gid)
---     REFERENCES parcel (gid)
---     NOT DEFERRABLE 
---     INITIALLY IMMEDIATE 
--- ;
-
--- Reference:  restriction_edited_parcel (table: restriction)
-
-
-ALTER TABLE restriction ADD CONSTRAINT restriction_edited_parcel 
-    FOREIGN KEY (owned_parcel_gid)
-    REFERENCES owned_parcel (gid)
-    NOT DEFERRABLE 
-    INITIALLY IMMEDIATE 
-;
+--ALTER TABLE parcel_wgs84 ADD CONSTRAINT parcel_wgs84_parcel 
+--    FOREIGN KEY (parcel_gid)
+--    REFERENCES parcel (gid)
+--    NOT DEFERRABLE 
+--    INITIALLY IMMEDIATE 
+--;
 
 -- Reference:  restriction_exception_drone (table: restriction_exception)
 
 
 ALTER TABLE restriction_exception ADD CONSTRAINT restriction_exception_drone 
     FOREIGN KEY (drone_id)
-    REFERENCES drone (gid)
+    REFERENCES drone (id)
     NOT DEFERRABLE 
     INITIALLY IMMEDIATE 
 ;
@@ -268,8 +238,6 @@ ALTER TABLE restriction_exception ADD CONSTRAINT restriction_exception_edited_pa
 
 
 
--- adds 3D point for home geometry on drone table
-SELECT AddGeometryColumn('drone', 'home_geom', 102243, 'POINT', 3, false);
 
 -- adds buffered geometry for parcel to test drone movements against
 SELECT AddGeometryColumn('owned_parcel', 'hull_geom', 102243, 'MULTIPOLYGON', 3, false);
