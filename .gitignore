@@ -1,5 +1,6 @@
 node_modules/
 /db/config.js
+/server/db/config.js
 /db/bower*
 /db/index.html
 /db/spec/
