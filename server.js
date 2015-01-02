@@ -5,6 +5,8 @@ var path = require('path');
 var bcrypt = require('bcrypt-nodejs');
 var partials = require('express-partials');
 
+var test = require('./db/utils');
+
 var app = express();
 var port = process.env.PORT || 3000;
 

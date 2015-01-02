@@ -52,6 +52,7 @@ Now you have the `parcel` table filled with all the Alameda county parce geometr
 `shp2pgsql -s 102643:4326 -c -g lot_geom /<your path to the unzipped Alameda data's parenty directory>/geospatial/Geospatial public.parcel_wgs84 | psql -U <your database username> -d dronepassdbtest -h <host>`
 
 Your tables should now look like the following:
+
 Schema  | Name | Type  |    Owner     
 ------------- | ------------- | ------------- | ------------- 
 public    | parcel              | table  | \<your database username\>
