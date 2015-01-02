@@ -7,8 +7,18 @@ describe('utils()', function () {
   'use strict';
 
   it('exists', function () {
-    expect(utils).to.be.a('function');
+    expect(utils.getParcelGeometry).to.be.a('function');
+  });
 
+  it('should return a geometry', function() {
+    var knexQ = utils.getParcelGeometry(0).then(function(row) {
+      
+    });
+    // var d1 = new Date;
+//   d1d = new Date;
+//   console.log(r);
+//   console.log('geog',(d1d-d1)+'ms');
+// });
   });
 
   it('does something', function () {
