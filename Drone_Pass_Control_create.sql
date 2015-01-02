@@ -46,8 +46,8 @@ CREATE TABLE flight_path (
     drone_id int  NOT NULL,
     drone_operator_id int  NOT NULL,
     -- path_geom geometry(LINESTRING)  NOT NULL,
-    flight_start timestamp  NOT NULL DEFAULT -infinity CHECK (flight_start < flight_end),
-    flight_end timestamp  NOT NULL DEFAULT infinity CHECK (flight_start < flight_end),
+    flight_start timestamp NULL, --DEFAULT "1970-01-01 00:00:00",-- CHECK (flight_start < flight_end),
+    flight_end timestamp NULL, --DEFAULT "294246-01-10 00:00:00",-- CHECK (flight_start < flight_end),
     CONSTRAINT flight_path_pk PRIMARY KEY (id)
 );
 
@@ -124,8 +124,8 @@ CREATE TABLE restriction_exception (
     id int  NOT NULL,
     drone_id int  NOT NULL,
     owned_parcel_gid int  NOT NULL,
-    exception_start timestamp  NOT NULL DEFAULT -infinity CHECK (exception_start < exception_end),
-    exception_end timestamp  NOT NULL DEFAULT infinity CHECK (exception_start < exception_end),
+    exception_start timestamp NULL,--  NOT NULL DEFAULT "-infinity" CHECK (exception_start < exception_end),
+    exception_end timestamp NULL,--NOT NULL DEFAULT "infinity" CHECK (exception_start < exception_end),
     CONSTRAINT restriction_exception_pk PRIMARY KEY (id)
 );
 

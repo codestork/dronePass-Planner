@@ -8,3 +8,4 @@ createTestDB.sh
 Create_Drone_Pass_Test_DB.sql
 testData/
 local_commands.sh
+dump_v1.sql
