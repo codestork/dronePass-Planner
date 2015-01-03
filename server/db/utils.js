@@ -25,6 +25,10 @@ var getParcelGeometry = function(gid, table){
   .where('gid',gid);
 }
 
+// utils.getParcelGeometry(0).then(function(row) { 
+//   result = row[0];
+//   console.log(result);
+// });
 
 /**
 * input: long, lat
