@@ -19,18 +19,46 @@ var BUFFER_OFFSET = 5; // 5 METERS
 
 /**
 * input: gid, table
-* output: knex query that selects Geometry of provided gid in provided table
+* output: knex query that selects GeoJSON Geometry of provided gid in provided table
 */
-var getParcelGeometry = function(gid, table){
+var getParcelGeometryJSON = function(gid, table){
   return pg.select(st.asGeoJSON('lot_geom'))
   .from(table || 'parcel')
   .where('gid',gid);
 }
 
-// utils.getParcelGeometry(0).then(function(row) { 
-//   result = row[0];
-//   console.log(result);
-// });
+
+
+/**
+* input: gid, table
+* output: knex query that selects Text Geometry of provided gid in provided table
+*/
+var getParcelGeometryText = function(gid, table){
+  return pg.select(st.asText('lot_geom'))
+  .from(table || 'parcel')
+  .where('gid',gid);
+}
+
+
+/**
+* input:  Geometry as Text
+* output: knex query that gives Convex Hull as Text
+*         result[0].st_astext holds convex hull
+*/
+var convertToConvexHullText = function(geoText){
+  return pg.raw("SELECT ST_AsText(ST_ConvexHull(ST_GeomFromText('"+geoText+"')))");
+}
+
+
+/**
+* input: Geometry as Text
+* output: knex query that gives Convex Hull as Raw Geometry
+*         result.rows[0].st_setsrid holds convex hull
+*/
+var convertToConvexHullRaw = function(geoText){
+  return pg.raw("SELECT ST_SetSRID(ST_ConvexHull(ST_GeomFromText('"+geoText+"')), 102243)");
+}
+
 
 /**
 * input: long, lat
@@ -62,11 +90,20 @@ var getParcelGid = function(longitude, latitude){
   .whereRaw("ST_Contains(lot_geom, ST_Transform(ST_GeometryFromText('POINT("+longitude+" "+latitude+")',4326), 102243))");
 }
 // var d2 = new Date;
-// getParcelGid(-122.023036, 37.634351).then(function(r){
+// getParcelGid(-122.023036, 37.634351)
+// .then(function(r){
 //   d2d = new Date;
 //   console.log(r);
 //   console.log('geom',(d2d-d2)+'ms');
-// });
+//   return r;
+// })
+// .then(function(r){
+//   return getParcelGeometry(r[0].gid)
+//   .then(function(geom){
+//     return {gid:r[0].gid, geom: geom[0].lot_geom}
+//   });
+// })
+// .then(console.log);
 
 
 
@@ -120,7 +157,7 @@ var addLandOwner = function(id, login, owner_authority) {
 
 /**
 * input:  id  (INTEGER)
-* output: knex query that removes row in land_owner table with given id
+* output: knex query removes row in land_owner table with given id
 */
 var removeLandOwner = function(id){
   return pg('land_owner')
@@ -147,19 +184,34 @@ var addParcelOwnership = function(land_owner_id, parcel, restriction_height){
 }
 
 /**
-* input:
-* output:
+* input:  gid (INTEGER)
+* output: knex query removes row in owned_parcel table specified by gid
 */
-var removeOwnedParcel = function(gid){
+var removeParcelOwnership = function(gid){
   return pg('owned_parcel')
   .where('gid')
   .delete();
 }
 
-
-
-
-
+/* Sample query to insert to owned_parcel table */
+// getParcelGeometryText(77677)
+// .then(function(r){
+//   return convertToConvexHullRaw(r[0].lot_geom)
+// })
+// .then(function(r){
+//   return addOwnedParcel(1, 77676, r.rows[0].st_setsrid, '10:00:00', '10:00:00')
+//   .then(function(result){
+//     console.log(result);
+//   })
+//   .catch(function(error){
+//     console.log('inside')
+//     console.log(error)
+//     return error;
+//   });
+// })
+// .catch(function(error){
+//   return error;
+// })
 
 
 //*************************************************************************
@@ -320,8 +372,11 @@ var _whereCreation = function(where_obj) {
 
 module.exports = {
   // General
-  getParcelGeometry:  getParcelGeometry,
-  getParcelGid:       getParcelGid,
+  getParcelGeometryJSON:    getParcelGeometryJSON,
+  getParcelGeometryText:    getParcelGeometryText,
+  convertToConvexHullRaw:   convertToConvexHullRaw,
+  convertToConvexHullText:  convertToConvexHullText,
+  getParcelGid:             getParcelGid,
   // Client
   getRestricted:      getRestricted, 
   setRestriction:     setRestriction,
