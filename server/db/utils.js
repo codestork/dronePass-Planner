@@ -146,6 +146,20 @@ var addParcelOwnership = function(land_owner_id, parcel, restriction_height){
   });
 }
 
+/**
+* input:
+* output:
+*/
+var removeOwnedParcel = function(gid){
+  return pg('owned_parcel')
+  .where('gid')
+  .delete();
+}
+
+
+
+
+
 
 
 //*************************************************************************

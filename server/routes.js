@@ -49,12 +49,27 @@ module.exports = {
     }
   },
 
+
+  /**
+  * expects post method
+  * expects user_id                 (INTEGER)
+  *         coordinates             (TUPLE)
+  *         restriction_start_time  (TIME)
+  *         restriction_end_time    (TIME)
+  * invokes
+  */
   'registerAddress': {
     post: function(req, res){
 
     }
   },
 
+
+  /**
+  * expects delete method
+  * expects gid (INTEGER)
+  * invokes
+  */
   'removeAddress': {
     post: function(req, res){
 
