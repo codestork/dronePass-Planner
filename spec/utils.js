@@ -1,9 +1,53 @@
 var path = require('path');
 var expect = require('chai').expect;
+var pg = require(path.join(__dirname, '..', './server/db/config.js'));
+var st = require('knex-postgis')(pg);
 
 var utils = require(path.join(__dirname, '..', './server/db/utils.js'));
 
+var getLandOwner = function(where){
+  return pg.select()
+  .from('land_owner')
+  .where(where);
+}
+
+//                  List of relations
+//  Schema |         Name          | Type  |   Owner   
+// --------+-----------------------+-------+-----------
+//  public | drone                 | table | dronepass
+//  public | drone_operator        | table | dronepass
+//  public | drone_position        | table | dronepass
+//  public | flight_path           | table | dronepass
+//  public | flight_path_buffered  | table | dronepass
+//  public | land_owner            | table | dronepass
+//  public | landing_zone          | table | dronepass
+//  public | owned_parcel          | table | dronepass
+//  public | parcel                | table | dronepass
+//  public | parcel_wgs84          | table | dronepass
+//  public | restriction_exception | table | dronepass
+//  public | spatial_ref_sys       | table | dronepass
+
+var LAND_OWNER_ID_ADD = 23;
+var LAND_OWNER_ID_REMOVE = 24;
+
 describe('utils()', function () {
+
+  before(function(done) {
+    // runs before all tests in this block
+    //utils.removeLandOwner(15);
+    utils.addLandOwner(LAND_OWNER_ID_REMOVE, 'yo@yo.yo', 1).then(function(r) {
+      done();
+    });
+  });
+
+  after(function(done){
+    // runs after all tests in this block
+    utils.removeLandOwner(LAND_OWNER_ID_ADD).exec(function(err, rows) {
+      utils.removeLandOwner(LAND_OWNER_ID_REMOVE).exec(function(err, rows) {
+        done();
+      })
+    });
+  });
 
   it('exists getParcelGeometry', function () {
     expect(utils.getParcelGeometry).to.be.a('function');
@@ -25,13 +69,21 @@ describe('utils()', function () {
     expect(utils.addLandOwner).to.be.a('function');
   });
 
-  it('exists addOwnedParcel', function () {
-    expect(utils.addOwnedParcel).to.be.a('function');
+  it('exists removeLandOwner', function () {
+    expect(utils.removeLandOwner).to.be.a('function');
+  });
+
+  it('exists addParcelOwnership', function () {
+    expect(utils.addParcelOwnership).to.be.a('function');
   });
   
   it('exists addDrone', function () {
     expect(utils.addDrone).to.be.a('function');
   });
+
+  it('exists getRestricted', function() {
+    expect(utils.getRestricted).to.be.a('function');
+  })
 
 
   it('should get parcel by lon lat, getParcelGid', function(done) {
@@ -60,15 +112,34 @@ describe('utils()', function () {
     }, 1000);
   });
 
-  it('should get parcel by lon lat, getParcelGid', function(done) {
+  it('should create a land lowner', function(done) {
     var result = {};
-    utils.getParcelGid(-122.023036, 37.634351).then(function(r){
+
+    utils.addLandOwner(LAND_OWNER_ID_ADD, 'yo@yo.yo', 1).returning('id').then(function(r) {
       result = r;
     });
 
     setTimeout(function () {
-      expect(result[0].gid).to.equal(77676);
+      expect(result[0]).to.equal(LAND_OWNER_ID_ADD);
       done();
     }, 1000);
   });
+
+  it('should remove a land owner', function(done) {
+    var result = {};
+    utils.removeLandOwner(LAND_OWNER_ID_REMOVE).exec(function() {
+      getLandOwner({id:LAND_OWNER_ID_REMOVE}).then(function(rows) {
+        result = rows;
+      });
+    }).catch(function(error) {
+      console.error(error);
+    });
+
+
+
+    setTimeout(function() {
+      expect(result.length).to.equal(0);
+      done();
+    }, 1000);
+  })
 });

@@ -1,6 +1,7 @@
 var pg = require('./config.js');
 var st = require('knex-postgis')(pg);
 
+var BUFFER_OFFSET = 5; // 5 METERS
 /**
 * All of the utility functions return a knex query
 * 
@@ -83,15 +84,23 @@ var getParcelGid = function(longitude, latitude){
 * input: parcel, start_time, duration
 * output:
 */
-var setRestriction = function(parcel, start_time, duration){
-  return pg('restriction')
-  .insert({
-    owned_parcel_gid: parcel.gid,
-    start_time: start_time,
-    duration: duration
+var setRestriction = function(land_owner_id, parcel_gid, start_time, end_time){
+  return pg('owned_parcel')
+  .where({
+    'land_owner_id' : land_owner_id,
+    'parcel_gid' : parcel_gid})
+  .update({
+    restriction_start: start_time,
+    restriction_end: end_time
   });
 }
 
+
+var getRestricted = function(whereParameters) {
+  return pg.select(['restriction_start', 'restriction_start'])
+  .from('owned_parcel')
+  .where(whereParameters);
+}
 
 /**
 * input:  id              (INTEGER)
@@ -99,7 +108,7 @@ var setRestriction = function(parcel, start_time, duration){
 *         owner_authority (INTEGER)
 * output: knex query that inserts an owner into the land_owner table
 */
-var addLandOwner = function(id, login, owner_authority){
+var addLandOwner = function(id, login, owner_authority) {
   return pg('land_owner')
   .insert({
     id: id,
@@ -118,22 +127,30 @@ var removeLandOwner = function(id){
   .delete();
 }
 
+// removeLandOwner(23).exec(function(err, rows) {
+//     });
 
 
 /**
 *
 *
 */
-var addOwnedParcel = function(land_owner, parcel, restriction_height){
+var addParcelOwnership = function(land_owner_id, parcel, restriction_height){
+//   geom: st.geomFromText(parcel.lot_geom)
+// }).into('points').toString();
   return pg('owned_parcel')
   .insert({
-    land_owner_id: land_owner,
+    land_owner_id: land_owner_id,
     parcel_gid: parcel.gid,
-    buffered_geom: parcel.lot_geom,
-    restriction_height: restriction_height,
-    srid: parcel.srid
+    // knex.raw('count(*) as user_count, status')
+    // //SELECT lot_geom FROM parcel WHERE 
+    // .whereRaw("ST_Intersects(ST_GeographyFromText('SRID=4326;POINT("+longitude+" "+latitude+")'), lot_geom)");
+    // hull_geom: ST_ConvexHull(ST_Buffer(parcel.lot_geom, BUFFER_OFFSET)),
+    // restriction_height: restriction_height || 0
   });
 }
+
+// var intersectsParcel = function()
 
 
 
@@ -183,10 +200,11 @@ module.exports = {
   getParcelGeometry:  getParcelGeometry,
   getParcelGid:       getParcelGid,
   // Client
+  getRestricted:      getRestricted, 
   setRestriction:     setRestriction,
   addLandOwner:       addLandOwner,
   removeLandOwner:    removeLandOwner,
-  addOwnedParcel:     addOwnedParcel,
+  addParcelOwnership: addParcelOwnership,
   // Drone
   addDrone:           addDrone
 }
