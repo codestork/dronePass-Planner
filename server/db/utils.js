@@ -90,8 +90,10 @@ var setRestriction = function(parcel, start_time, duration){
 
 
 /**
-*
-*
+* input:  id              (INTEGER)
+*         login           (VARCHAR)
+*         owner_authority (INTEGER)
+* output: knex query that inserts an owner into the land_owner table
 */
 var addLandOwner = function(id, login, owner_authority){
   return pg('land_owner')
@@ -101,6 +103,17 @@ var addLandOwner = function(id, login, owner_authority){
     owner_authority: owner_authority
   });
 }
+
+/**
+* input:  id  (INTEGER)
+* output: knex query that removes row in land_owner table with given id
+*/
+var removeLandOwner = function(id){
+  return pg('land_owner')
+  .where('id',id)
+  .delete();
+}
+
 
 
 /**
@@ -168,6 +181,7 @@ module.exports = {
   // Client
   setRestriction:     setRestriction,
   addLandOwner:       addLandOwner,
+  removeLandOwner:    removeLandOwner,
   addOwnedParcel:     addOwnedParcel,
   // Drone
   addDrone:           addDrone
