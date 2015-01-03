@@ -131,13 +131,6 @@ var removeLandOwner = function(id){
 
 /**
 
-
-
-
-/**
-*
-*
-*/
 var addParcelOwnership = function(land_owner_id, parcel, restriction_height){
 
   var parcelGeomQuery = "SELECT lot_geom FROM public.parcel WHERE gid=" + parcel.gid;
@@ -155,7 +148,9 @@ var addParcelOwnership = function(land_owner_id, parcel, restriction_height){
     // restriction_height: restriction_height || 0
   });
 }
-
+*
+*
+*/
 
 
 
