@@ -18,10 +18,7 @@ Follow the instructions on the [Postgres installation page](http://postgis.net/i
 There will be two different databases to support development. One will be used for unit testing (dronepassdbtest) and the other will be used for your own dev testing (dronepass). If these databases already exist you'll need to either drop the database or drop the tables (`DROP SCHEMA public cascade;CREATE SCHEMA public;CREATE EXTENSION postgis;`). After you've created a database and setup it's permissions you'll need to apply the PostGIS extension to each database:
 
 ``` bash
-computadora:dronePass-Planner yourname$ createuser -P -s -e dronepass
-Enter password for new role: 
-Enter it again: 
-CREATE ROLE dronepass PASSWORD '<hashed stuff>' SUPERUSER CREATEDB CREATEROLE INHERIT LOGIN;
+createuser -P -s -e dronepass
 ```
 
 ``` SQL
