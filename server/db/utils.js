@@ -20,7 +20,7 @@ var st = require('knex-postgis')(pg);
 * output: knex query that selects Geometry of provided gid in provided table
 */
 var getParcelGeometry = function(gid, table){
-  return pg.select(st.asGeoJSON('geom'))
+  return pg.select(st.asGeoJSON('lot_geom'))
   .from(table || 'parcel')
   .where('gid',gid);
 }
