@@ -183,6 +183,8 @@ var addParcelOwnership = function(land_owner_id, parcel, restriction_height){
   });
 }
 
+
+
 /**
 * input:  gid (INTEGER)
 * output: knex query removes row in owned_parcel table specified by gid
@@ -212,6 +214,9 @@ var removeParcelOwnership = function(gid){
 // .catch(function(error){
 //   return error;
 // })
+
+
+
 
 
 //*************************************************************************
