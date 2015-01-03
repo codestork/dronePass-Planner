@@ -1,3 +1,5 @@
+var utils = require('./db/utils');
+
 module.exports = {
   'test1': {
     get: function(req, res){
@@ -9,9 +11,22 @@ module.exports = {
     }
   },
 
+
+  /**
+  * expects post
+  * expects user_id (INTEGER), login (STRING), and owner_authority (INTEGER)
+  * invokes addLandOwner to insert row to land_owner table
+  */
   'registerUser': {
     post: function(req, res){
-
+      rb = req.body;
+      utils.addLandOwner(rb.user_id, rb.login, rb.owner_authority)
+      .then(function(result){
+        res.status(200).send(result);
+      })
+      .catch(function(error){
+        res.status(400).send(error);
+      });
     }
   },
 

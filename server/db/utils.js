@@ -38,7 +38,7 @@ var getParcelGidByGeography = function(longitude, latitude){
   .whereRaw("ST_Intersects(ST_GeographyFromText('SRID=4326;POINT("+longitude+" "+latitude+")'), lot_geom)");
 }
 // var d1 = new Date;
-// getParcelGid(-122.023036, 37.634351).then(function(r){
+// getParcelGidByGeography(-122.023036, 37.634351).then(function(r){
 //   d1d = new Date;
 //   console.log(r);
 //   console.log('geog',(d1d-d1)+'ms');
@@ -56,7 +56,7 @@ var getParcelGid = function(longitude, latitude){
   .whereRaw("ST_Contains(ST_SetSRID(lot_geom, 102243), ST_Transform(ST_GeometryFromText('POINT("+longitude+" "+latitude+")',4326), 102243))");
 }
 // var d2 = new Date;
-// getParcelGidByContains(-122.023036, 37.634351).then(function(r){
+// getParcelGid(-122.023036, 37.634351).then(function(r){
 //   d2d = new Date;
 //   console.log(r);
 //   console.log('geom',(d2d-d2)+'ms');
@@ -93,9 +93,10 @@ var setRestriction = function(parcel, start_time, duration){
 *
 *
 */
-var addLandOwner = function(login, owner_authority){
+var addLandOwner = function(id, login, owner_authority){
   return pg('land_owner')
   .insert({
+    id: id,
     login: login,
     owner_authority: owner_authority
   });
