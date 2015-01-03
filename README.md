@@ -111,6 +111,17 @@ psql -d dronepass -a -f Drone_Pass_Control_create.sql
 psql -d dronepassdbtest -a -f Drone_Pass_Control_create.sql
 ```
 
+### Cleaning up the Alameda county data
+Alameda county has a number of columns that are not of any use to DronePass. The Drop_Extra_Alameda_Cols.sql file drops all those tables that are not to be used.
+
+```base
+ psql -d dronepass -a -f Drop_Extra_Alameda_Cols.sql
+```
+
+```base
+ psql -d dronepassdbtest -a -f Drop_Extra_Alameda_Cols.sql
+```
+
 Afterwards your tables should look like the following:
 
  Schema  | Name | Type  |    Owner       
@@ -125,6 +136,5 @@ Afterwards your tables should look like the following:
  public | owned_parcel           | table | dronepass
  public | parcel                        | table | dronepass
  public | parcel_wgs84                        | table | dronepass
- public | restriction                  | table | dronepass
  public | restriction_exception | table | dronepass
  public | spatial_ref_sys          | table | dronepass
