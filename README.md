@@ -23,6 +23,7 @@ CREATE USER dronepass WITH PASSWORD '<your pass word>';
 
 ``` SQL
 CREATE DATABASE dronepass;
+GRANT ALL PRIVILEGES ON DATABASE dronepass to dronepass;
 CREATE SCHEMA public;
 CREATE EXTENSION postgis;
 ```
@@ -30,6 +31,7 @@ CREATE EXTENSION postgis;
 
 ``` SQL
 CREATE DATABASE dronepassdbtest;
+GRANT ALL PRIVILEGES ON DATABASE dronepassdbtest to dronepass;
 CREATE SCHEMA public;
 CREATE EXTENSION postgis;
 ```
