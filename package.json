@@ -20,6 +20,7 @@
     "bcrypt-nodejs": "0.0.3",
     "bluebird": "^2.4.0",
     "body-parser": "^1.10.0",
+    "cors": "^2.5.2",
     "express": "^4.10.6",
     "express-partials": "^0.3.0",
     "grunt": "^0.4.4",
@@ -38,6 +39,7 @@
     "request": "^2.51.0"
   },
   "devDependencies": {
-    "chai": "~1.8.0"
+    "chai": "~1.8.0",
+    "chai-as-promised": "^4.1.1"
   }
 }
