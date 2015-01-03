@@ -127,30 +127,10 @@ var removeLandOwner = function(id){
   .delete();
 }
 
-// removeLandOwner(23).exec(function(err, rows) {
-//     });
 
 
-/**
-*
-*
-*/
-var addParcelOwnership = function(land_owner_id, parcel, restriction_height){
-//   geom: st.geomFromText(parcel.lot_geom)
-// }).into('points').toString();
-  return pg('owned_parcel')
-  .insert({
-    land_owner_id: land_owner_id,
-    parcel_gid: parcel.gid,
-    // knex.raw('count(*) as user_count, status')
-    // //SELECT lot_geom FROM parcel WHERE 
-    // .whereRaw("ST_Intersects(ST_GeographyFromText('SRID=4326;POINT("+longitude+" "+latitude+")'), lot_geom)");
-    // hull_geom: ST_ConvexHull(ST_Buffer(parcel.lot_geom, BUFFER_OFFSET)),
-    // restriction_height: restriction_height || 0
-  });
-}
 
-// var intersectsParcel = function()
+
 
 
 
