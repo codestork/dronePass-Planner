@@ -75,21 +75,21 @@ lynx -source https://www.acgov.org/maps/geospatial/geospatial.zip > geospatial.z
 After copying the data from the alameda GIS portal you'll need to use the Postgres `shp2pgsql` program to copy the extracted geospatial shapefile into the appropriate table in your databases. The first table we're copying to is the `parcel` table and that requires a projection from the feet based coordinate system (102643) to the meter based system (102243).
 
 ```bash
-shp2pgsql -s 102643:102243 -d -g lot_geom -S ./geospatial/Geospatial public.parcel | psql -U dronepass -d dronepass -h <host>
+shp2pgsql -s 102643:102243 -c -g lot_geom ./geospatial/Geospatial public.parcel | psql -U dronepass -d dronepass -h <host>
 ```
 
 ```bash
-shp2pgsql -s 102643:102243 -d -g lot_geom -S ./geospatial/Geospatial public.parcel | psql -U dronepass -d dronepassdbtest -h <host>
+shp2pgsql -s 102643:102243 -c -g lot_geom ./geospatial/Geospatial public.parcel | psql -U dronepass -d dronepassdbtest -h <host>
 ```
 
 Now you have the `parcel` table filled with all the Alameda county parce geometries in the 102243 projection. We're also going to keep a set of geometries in WGS84 geographic coordinates in the `parcel_wgs84` table for front end rendering [http://epsg.io/4326](http://epsg.io/4326).
 
 ```bash
-shp2pgsql -s 102643:4326 -d -g lot_geom -S ./geospatial/Geospatial public.parcel_wgs84 | psql -U dronepass -d dronepass -h <host>
+shp2pgsql -s 102643:4326 -c -g lot_geom ./geospatial/Geospatial public.parcel_wgs84 | psql -U dronepass -d dronepass -h <host>
 ```
 
 ```bash
-shp2pgsql -s 102643:4326 -d -g lot_geom -S ./geospatial/Geospatial public.parcel_wgs84 | psql -U dronepass -d dronepassdbtest -h <host>
+shp2pgsql -s 102643:4326 -c -g lot_geom ./geospatial/Geospatial public.parcel_wgs84 | psql -U dronepass -d dronepassdbtest -h <host>
 ```
 
 Your tables should now look like the following:
