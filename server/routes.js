@@ -13,7 +13,7 @@ module.exports = {
 
 
   /**
-  * expects post
+  * expects post method
   * expects user_id (INTEGER), login (STRING), and owner_authority (INTEGER)
   * invokes addLandOwner to insert row to land_owner table
   */
@@ -30,9 +30,22 @@ module.exports = {
     }
   },
 
+
+  /**
+  * expects delete method
+  * expects user_id (INTEGER)
+  * invokes removeLandOwner to delete row where id == user_id
+  */
   'removeUser': {
     delete: function(req, res){
-
+      rb = req.body;
+      utils.removeLandOwner(rb.user_id)
+      .then(function(removed_entry){
+        res.status(200).send(removed_entry.toString());
+      })
+      .catch(function(error){
+        res.status(400).send(error);
+      });
     }
   },
 
