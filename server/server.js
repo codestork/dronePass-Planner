@@ -13,8 +13,7 @@ var app = express();
 var port = process.env.PORT || 3000;
 
 app.use(morgan('dev'));
-app.use(bodyParser.urlencoded({'extended':'true'}));
-app.use(bodyParser.json());
+app.use(bodyParser.json({'type':'application/json'}));
 
 for(var route in routes){
   for(var method in routes[route]){
