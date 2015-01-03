@@ -226,7 +226,6 @@ ALTER TABLE restriction_exception ADD CONSTRAINT restriction_exception_drone
 
 -- Reference:  restriction_exception_edited_parcel (table: restriction_exception)
 
-
 ALTER TABLE restriction_exception ADD CONSTRAINT restriction_exception_edited_parcel 
     FOREIGN KEY (owned_parcel_gid)
     REFERENCES owned_parcel (gid)
