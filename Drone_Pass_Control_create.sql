@@ -1,7 +1,7 @@
 -- Created by Vertabelo (http://vertabelo.com)
 -- Script type: create
 -- Scope: [tables, references, sequences, views, procedures]
--- Generated at Sat Jan 03 22:25:55 UTC 2015
+-- Generated at Sun Jan 04 01:04:49 UTC 2015
 
 
 
@@ -40,13 +40,13 @@ CREATE TABLE drone_position (
 
 -- Table: flight_path
 CREATE TABLE flight_path (
-    id serial  NOT NULL,
+    gid serial  NOT NULL,
     drone_id int  NOT NULL,
     drone_operator_id int  NOT NULL,
     -- path_geom geometry(LINESTRING)  NOT NULL,
     flight_start timestamp  NOT NULL DEFAULT '-infinity'::timestamp without time zone CHECK (flight_start < flight_end),
     flight_end timestamp  NOT NULL DEFAULT 'infinity'::timestamp without time zone CHECK (flight_start < flight_end),
-    CONSTRAINT flight_path_pk PRIMARY KEY (id)
+    CONSTRAINT flight_path_pk PRIMARY KEY (gid)
 );
 
 
@@ -54,7 +54,7 @@ CREATE TABLE flight_path (
 -- Table: flight_path_buffered
 CREATE TABLE flight_path_buffered (
     gid serial  NOT NULL,
-    flight_path_id int  NOT NULL,
+    flight_path_gid int  NOT NULL,
     -- buffered_geom geometry(POLYGON)  NOT NULL,
     CONSTRAINT flight_path_buffered_pk PRIMARY KEY (gid)
 );
@@ -168,8 +168,8 @@ ALTER TABLE owned_parcel ADD CONSTRAINT edited_parcel_parcel
 
 
 ALTER TABLE flight_path_buffered ADD CONSTRAINT flight_path_buffered_flight_path 
-    FOREIGN KEY (flight_path_id)
-    REFERENCES flight_path (id)
+    FOREIGN KEY (flight_path_gid)
+    REFERENCES flight_path (gid)
     NOT DEFERRABLE 
     INITIALLY IMMEDIATE 
 ;
