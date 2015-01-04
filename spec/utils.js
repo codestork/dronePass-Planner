@@ -29,15 +29,32 @@ var getLandOwner = function(where){
 
 var LAND_OWNER_ID_ADD = 23;
 var LAND_OWNER_ID_REMOVE = 24;
+var LAND_OWNER_ID_TEST = 25;
+var DRONE_TYPE = 'amazon';
+var INITIAL_DRONE_COUNT = -2;
+var DRONE_ID;
+var DRONE_OPERATOR_ID;
+var TIME_OUT = 250;
+var DRONE_OPERATOR_NAME = 'Bob';
 
 describe('utils()', function () {
 
   before(function(done) {
     // runs before all tests in this block
     //utils.removeLandOwner(15);
-    utils.addLandOwner(LAND_OWNER_ID_REMOVE, 'yo@yo.yo', 1).then(function(r) {
-      done();
+    pg('drone').count('id').then(function(c) {
+      INITIAL_DRONE_COUNT = parseInt(c[0].count);
     });
+    utils.addLandOwner(LAND_OWNER_ID_REMOVE, 'yo@yo.yo', 1).then(function(r) {
+    });
+    utils.addDroneOperator(DRONE_OPERATOR_NAME).then(function(r) {
+    });
+
+
+    setTimeout(function() {
+      done();
+    }, TIME_OUT);
+
   });
 
   after(function(done){
@@ -76,15 +93,26 @@ describe('utils()', function () {
   it('exists addParcelOwnership', function () {
     expect(utils.addParcelOwnership).to.be.a('function');
   });
-  
+
+  it('exists getRestricted', function() {
+    expect(utils.getRestricted).to.be.a('function');
+  });
+
   it('exists addDrone', function () {
     expect(utils.addDrone).to.be.a('function');
   });
 
-  it('exists getRestricted', function() {
-    expect(utils.getRestricted).to.be.a('function');
-  })
+  it('exists addDroneOperator', function () {
+    expect(utils.addDroneOperator).to.be.a('function');
+  });
 
+  it('exists removeDrone', function () {
+    expect(utils.removeDrone).to.be.a('function');
+  });
+
+  it('exists removeDroneOperator', function () {
+    expect(utils.removeDroneOperator).to.be.a('function');
+  });      
 
   it('should get parcel by lon lat, getParcelGid', function(done) {
     var result = {};
@@ -95,7 +123,7 @@ describe('utils()', function () {
     setTimeout(function () {
       expect(result[0].gid).to.equal(77676);
       done();
-    }, 1000);
+    }, TIME_OUT);
   });
 
   it('should get parcel by lon lat, getParcelGeometry', function(done) {
@@ -109,20 +137,24 @@ describe('utils()', function () {
     setTimeout(function () {
       expect(result[0].lot_geom).to.equal(str);
       done();
-    }, 1000);
+    }, TIME_OUT);
   });
 
   it('should create a land lowner', function(done) {
     var result = {};
 
     utils.addLandOwner(LAND_OWNER_ID_ADD, 'yo@yo.yo', 1).returning('id').then(function(r) {
-      result = r;
+      getLandOwner({id:LAND_OWNER_ID_ADD}).then(function(rows) {
+        result = rows;
+      });
     });
-
+    
     setTimeout(function () {
-      expect(result[0]).to.equal(LAND_OWNER_ID_ADD);
+      expect(result[0].id).to.equal(LAND_OWNER_ID_ADD);
+      expect(result.length).to.equal(1);
+      expect(result[0].login).to.equal('yo@yo.yo');
       done();
-    }, 1000);
+    }, TIME_OUT);
   });
 
   it('should remove a land owner', function(done) {
@@ -132,14 +164,92 @@ describe('utils()', function () {
         result = rows;
       });
     }).catch(function(error) {
-      console.error(error);
+      expect(true).to.equal(false);
     });
-
-
 
     setTimeout(function() {
       expect(result.length).to.equal(0);
       done();
-    }, 1000);
-  })
+    }, TIME_OUT);
+  });
+
+  it('should add drone', function(done) {
+    var count = 0;
+    var droneId = -1;
+    
+    utils.addDrone(DRONE_TYPE, 4).returning('id').then(function(r) {
+      DRONE_ID = r[0];
+      pg('drone').count('id').then(function(c) {
+        count = c;
+      });
+    });
+
+    setTimeout(function() {
+      expect(parseInt(count[0].count)).to.equal(INITIAL_DRONE_COUNT + 1);
+      done();
+    }, TIME_OUT);
+  });
+
+  it('should remove drone', function(done) {
+    // this test requires that the 'should add drone' test runs successfully
+    var countBefore = -1;
+    var countAfter = -1;
+    
+    pg('drone').count('id').then(function(c) {
+      countBefore = parseInt(c[0].count);
+      utils.removeDrone(DRONE_ID).exec(function() {
+        pg('drone').count('id').then(function(c) {
+          countAfter = parseInt(c[0].count);
+        });
+      });
+    });
+
+    setTimeout(function() {
+      expect(parseInt(countBefore - 1)).to.equal(countAfter);
+      done();
+    }, TIME_OUT);
+  });
+
+  it('should add drone operator', function(done) {
+    utils.addDroneOperator(DRONE_OPERATOR_NAME).returning('id').then(function(r){
+      DRONE_OPERATOR_ID = r[0];
+    });
+
+    setTimeout(function() {
+      expect(DRONE_OPERATOR_ID).to.be.an('number');
+      done();
+    }, TIME_OUT);
+  });
+
+  it('should remove drone operator', function(done) {
+    var countBefore = -1;
+    var countAfter = -1;
+    pg('drone_operator').count('id').then(function(c) {
+      countBefore = parseInt(c[0].count);
+      utils.removeDroneOperator(DRONE_OPERATOR_ID).exec(function() {
+        pg('drone_operator').count('id').then(function(c) {
+          countAfter = parseInt(c[0].count);
+        });
+      });
+    });
+
+    setTimeout(function() {
+      expect(parseInt(countBefore - 1)).to.equal(countAfter);
+      done();
+    }, TIME_OUT);
+  });
+
+  it('should add flight path', function(done) {
+    setTimeout(function() {
+      expect(false).to.equal(true);
+      done();
+    }, TIME_OUT);
+  });
+
+  it('should remove flight path?', function(done) {
+    setTimeout(function() {
+      expect(false).to.equal(true);
+      done();
+    }, TIME_OUT);
+  });          
 });
