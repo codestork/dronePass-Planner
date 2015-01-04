@@ -20,7 +20,7 @@ CREATE TABLE drone (
 -- Table: drone_operator
 CREATE TABLE drone_operator (
     id serial  NOT NULL,
-    opeartor_name varchar(128)  NULL,
+    operator_name varchar(128)  NULL,
     CONSTRAINT drone_operator_pk PRIMARY KEY (id)
 );
 
