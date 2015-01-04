@@ -198,10 +198,12 @@ var removeParcelOwnership = function(gid){
 /* Sample query to insert to owned_parcel table */
 // getParcelGeometryText(77677)
 // .then(function(r){
-//   return convertToConvexHullRaw(r[0].lot_geom)
+//   return convertToConvexHullText(r[0].lot_geom)
 // })
 // .then(function(r){
-//   return addOwnedParcel(1, 77676, r.rows[0].st_setsrid, '10:00:00', '10:00:00')
+//   console.log('this is the geom')
+//   console.log(r.rows[0].st_astext)
+//   return addParcelOwnership(1234, 77676, r.rows[0].st_astext, '10:00:00', '10:00:00')
 //   .then(function(result){
 //     console.log(result);
 //   })
@@ -212,6 +214,8 @@ var removeParcelOwnership = function(gid){
 //   });
 // })
 // .catch(function(error){
+//   console.log('out')
+//   console.log(error)
 //   return error;
 // })
 
