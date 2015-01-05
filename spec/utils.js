@@ -357,13 +357,14 @@ describe('utils()', function () {
 
   xit('should add flight path', function(done) {
     var result;
-    var linestring = { "type": "LineString", "coordinates": [ [102.0, 0.0], [103.0, 1.0], [104.0, 0.0], [105.0, 1.0] ] };
+    var linestring = { "type": "LineString", "coordinates": [ [-122.0, 37.55], [-121.950, 37.56], [-121.950, 37.57], [-121.850, 37.58] ] };
 
     utils.addDrone(DRONE_TYPE, 4).returning('id').then(function(r) {
       var drone_id = r[0];
       utils.addDroneOperator(DRONE_OPERATOR_NAME).returning('id').then(function(r){
         var drone_operator_id = r[0];
         utils.addFlightPath(drone_id, drone_operator_id, "'1999-01-08 04:05:06'", "'1999-01-08 05:05:06'", "'" + JSON.stringify(linestring) + "'").exec(function(err, r) {
+          console.log(r);
           utils.getFlighPathGeom({gid: r.rows[0].gid}).exec(function(err, rows) {
             result = JSON.parse(rows.rows[0].st_asgeojson);
           });
@@ -372,6 +373,7 @@ describe('utils()', function () {
     });
 
     setTimeout(function() {
+      // try deeply?
       var resCoords = result.coordinates;
       var origCoords = linestring.coordinates;
       for (var i = 0; i < origCoords.length; i++) {
@@ -379,6 +381,26 @@ describe('utils()', function () {
           expect(resCoords[i][j]).to.be.closeTo(origCoords[i][j], 0.01);
         }
       }
+      done();
+    }, TIME_OUT);
+  });
+
+  it('should fail to add a flight path with incorrect time order', function(done) {
+    var errResult;
+    var linestring = { "type": "LineString", "coordinates": [ [-122.0, 37.55], [-121.950, 37.56], [-121.950, 37.57], [-121.850, 37.58] ] };
+
+    utils.addDrone(DRONE_TYPE, 4).returning('id').then(function(r) {
+      var drone_id = r[0];
+      utils.addDroneOperator(DRONE_OPERATOR_NAME).returning('id').then(function(r){
+        var drone_operator_id = r[0];
+        utils.addFlightPath(drone_id, drone_operator_id, "'1999-01-08 05:05:06'","'1999-01-08 04:05:06'", "'" + JSON.stringify(linestring) + "'").exec(function(err, r) {
+          errResult = err.routine;
+        });
+      });
+    });
+
+    setTimeout(function() {
+      expect(errResult).to.equal('ExecConstraints');
       done();
     }, TIME_OUT);
   });

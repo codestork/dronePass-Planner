@@ -288,20 +288,31 @@ var removeDroneOperator = function(id){
 * output: knex query that removes a row in the drone_operator table
 */
 var addFlightPath = function(drone_id, drone_operator_id, flight_start, flight_end, linestring_wgs84) {
-  var insertLine = 'INSERT INTO flight_path (drone_id, drone_operator_id, flight_start, flight_end, path_geom)';
+  // test a buffered version of the polygon against the currently restricted parcels
+  //SELECT ST_Intersects('POINT(0 0)'::geometry, 'LINESTRING ( 2 0, 0 2 )'::geometry)
+  //pg.select('gid')
+  //.from('parcel')
+  //.whereRaw("ST_Contains(lot_geom, ST_Transform(ST_GeometryFromText('POINT("+longitude+" "+latitude+")',4326), 102243))");
   var linestringValue = 'ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(' + linestring_wgs84 + '),4326),102243)';
-  var valuesLine = 'VALUES (' + drone_id + ',' + drone_operator_id + ',' + flight_start + ',' + flight_end + ',' + linestringValue +')';
-  var rawQuery = insertLine + ' ' + valuesLine + ' ' + 'RETURNING gid;'
+  var intersectLine = 'ST_Intersects(' + linestringValue + ',' + 'lot_geom' + ')';
 
-  // Create a buffered version of the polygon
-
-  // test the buffered version of the polygon against the currently restricted parcels
-
+  return pg.select('gid')
+    .from('parcel')
+    .whereRaw(intersectLine);//.
+    //then(function(rows) {
     // if their is a restriction maybe return the restricted geometries?
+    // if there is no restriction return the geometry
 
-    // if there is no restriction return the geometry?
+      // insert a buffered version of the polygon
 
-  return pg.raw(rawQuery);
+      // insert the flight path
+  // var insertLine = 'INSERT INTO flight_path (drone_id, drone_operator_id, flight_start, flight_end, path_geom)';
+  // var linestringValue = 'ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(' + linestring_wgs84 + '),4326),102243)';
+  // var valuesLine = 'VALUES (' + drone_id + ',' + drone_operator_id + ',' + flight_start + ',' + flight_end + ',' + linestringValue +')';
+  // var rawQuery = insertLine + ' ' + valuesLine + ' ' + 'RETURNING gid;'      
+
+  // return pg.raw(rawQuery);      
+    //});  
 }
 
 
