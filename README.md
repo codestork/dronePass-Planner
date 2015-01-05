@@ -15,10 +15,10 @@ In order to run tests locally a developer will need a Postgres database setup wi
 Follow the instructions on the [Postgres installation page](http://postgis.net/install/) in order to get yourself the latest and greatest 9.4 version. Postgres 9.4 only plays nicely with PostGIS 2.1 and later versions. The following assumes that you've added the Postgres bin to your path.
 
 ### Creating your databases
-There will be two different databases to support development. One will be used for unit testing (dronepassdbtest) and the other will be used for your own dev testing (dronepass). If these databases already exist you'll need to either drop the database or drop the tables (`DROP SCHEMA public cascade;CREATE SCHEMA public;CREATE EXTENSION postgis;`). After you've created a database and setup it's permissions you'll need to apply the PostGIS extension to each database:
+There will be two different databases to support development. One will be used for unit testing (dronepasstest) and the other will be used for your own dev testing (dronepass). If these databases already exist you'll need to either drop the database or drop the tables (`DROP SCHEMA public cascade;CREATE SCHEMA public;CREATE EXTENSION postgis;`). After you've created a database and setup it's permissions you'll need to apply the PostGIS extension to each database:
 
 ``` bash
-createuser -P -s -e dronepass
+$ createuser -P -s -e dronepass
 ```
 
 ``` SQL
@@ -30,7 +30,7 @@ CREATE EXTENSION postgis;
 
 ``` SQL
 CREATE DATABASE dronepassdbtest;
-GRANT ALL PRIVILEGES ON DATABASE dronepassdbtest to dronepass;
+GRANT ALL PRIVILEGES ON DATABASE dronepasstest to dronepass;
 CREATE EXTENSION postgis;
 ```
 
@@ -40,7 +40,8 @@ CREATE EXTENSION postgis;
 If there is a Postgres dump file created for the planner database, then you're essentially ready to go. 
 
 ```bash
-psql --set ON_ERROR_STOP=on -d dronepass -f dump_v1.sql
+$ psql --set ON_ERROR_STOP=on -d dronepass -f dump_v1.sql
+$ psql --set ON_ERROR_STOP=on -d dronepasstest -f dump_v1.sql
 ```
 
 You're done. Nothing left for you to do but kick back and enjoy not having to create the tables.
@@ -69,27 +70,19 @@ public    | spatial_ref_sys | table  | dronepass
 As of the writing of this README(Dec 31, 2014) the data for alameda county is located at the county's [geospatial map files portal](https://www.acgov.org/government/geospatial.htm), the zip file is located at the following address: [https://www.acgov.org/maps/geospatial/geospatial.zip](https://www.acgov.org/maps/geospatial/geospatial.zip). The file is a 200Mb zip file that contains an ESRI shapefile representation of the parcel data. If you don't have a GUI client you will need to download the file via lynx (`brew install lynx`) in order to get this data into your database server. If using lynx to save the data to your current directory: 
 
 ```bash
-lynx -source https://www.acgov.org/maps/geospatial/geospatial.zip > geospatial.zip
+$ lynx -source https://www.acgov.org/maps/geospatial/geospatial.zip > geospatial.zip
 ```
 
-After copying the data from the alameda GIS portal you'll need to use the Postgres `shp2pgsql` program to copy the extracted geospatial shapefile into the appropriate table in your databases. The first table we're copying to is the `parcel` table and that requires a projection from the feet based coordinate system (102643) to the meter based system (102243).
+After copying the data from the alameda GIS portal you'll need to use the Postgres `shp2pgsql` program to copy the extracted geospatial shapefile into the appropriate table in your database. The first table we're copying to is the `parcel` table and that requires a projection from the feet based coordinate system (102643) to the meter based system (102243).
 
 ```bash
-shp2pgsql -s 102643:102243 -c -g lot_geom ./geospatial/Geospatial public.parcel | psql -U dronepass -d dronepass -h <host>
-```
-
-```bash
-shp2pgsql -s 102643:102243 -c -g lot_geom ./geospatial/Geospatial public.parcel | psql -U dronepass -d dronepassdbtest -h <host>
+$ shp2pgsql -s 102643:102243 -c -g lot_geom ./geospatial/Geospatial public.parcel | psql -U dronepass -d dronepass -h <host>
 ```
 
 Now you have the `parcel` table filled with all the Alameda county parce geometries in the 102243 projection. We're also going to keep a set of geometries in WGS84 geographic coordinates in the `parcel_wgs84` table for front end rendering [http://epsg.io/4326](http://epsg.io/4326).
 
 ```bash
-shp2pgsql -s 102643:4326 -c -g lot_geom ./geospatial/Geospatial public.parcel_wgs84 | psql -U dronepass -d dronepass -h <host>
-```
-
-```bash
-shp2pgsql -s 102643:4326 -c -g lot_geom ./geospatial/Geospatial public.parcel_wgs84 | psql -U dronepass -d dronepassdbtest -h <host>
+$ shp2pgsql -s 102643:4326 -c -g lot_geom ./geospatial/Geospatial public.parcel_wgs84 | psql -U dronepass -d dronepass -h <host>
 ```
 
 Your tables should now look like the following:
@@ -104,22 +97,14 @@ public    | spatial_ref_sys     | table  | dronepass
 Now you’ll need to create the rest of the tables for the database by running the sql Drone_Pass_Control_create.sql script:
 
 ```bash
-psql -d dronepass -a -f Drone_Pass_Control_create.sql
-```
-
-```bash
-psql -d dronepassdbtest -a -f Drone_Pass_Control_create.sql
+$ psql -d dronepass -a -f Drone_Pass_Control_create.sql
 ```
 
 ### Cleaning up the Alameda county data
 Alameda county has a number of columns that are not of any use to DronePass. The `Prepare_Parcel_Data.sql` file drops all those columns that are not to be used. There is also a spatial index on public.parcel lot_geom that is applied by the `Prepare_Parcel_Data.sql` file.
 
 ```base
- psql -d dronepass -a -f Prepare_Parcel_Data.sql
-```
-
-```base
- psql -d dronepassdbtest -a -f Prepare_Parcel_Data.sql
+$ psql -d dronepass -a -f Prepare_Parcel_Data.sql
 ```
 
 Afterwards your tables should look like the following:
@@ -138,3 +123,16 @@ Afterwards your tables should look like the following:
  public | parcel_wgs84                        | table | dronepass
  public | restriction_exception | table | dronepass
  public | spatial_ref_sys          | table | dronepass
+
+### Creating a Postgres Backup File
+Now that you've got your database setup, you should create a backup of the initial state of the database using the Postgres `pg_dump` command:
+
+```bash
+$ pg_dump dronepass > dump_v1.sql
+```
+
+### Create Testing Database
+Now that you've generated the dump file, make sure to update the `dronepasstest` database
+```bash
+$ psql --set ON_ERROR_STOP=on -d dronepasstest -f dump_v1.sql
+```
