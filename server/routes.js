@@ -56,11 +56,41 @@ module.exports = {
   *         coordinates             (TUPLE)
   *         restriction_start_time  (TIME)
   *         restriction_end_time    (TIME)
-  * invokes
+  * Finds the gid of given coordinates
+  * Creates Hull Geometry of found gid's geometry
+  * Inserts row into owned_parcel with given & found information
   */
   'registerAddress': {
     post: function(req, res){
-
+      rb = req.body;
+      var parcel_gid, geom;
+      if (rb.coordinates) {
+        console.log('coordinates received...');
+        console.log(rb.coordinates[0]);
+        console.log(rb.coordinates[1]);
+      } else {
+        console.log('coordinates missing');
+      }
+      utils.getParcelGid(rb.coordinates[0], rb.coordinates[1])
+      .then(function(result){
+        console.log('found parcel gid', result[0].gid);
+        return parcel_gid = result[0].gid;
+      })
+      .then(utils.getParcelGeometryText)
+      .then(function(result){
+        return utils.convertToConvexHull(result[0].lot_geom);
+      })
+      .then(function(geom){
+        return utils.addParcelOwnership(rb.user_id, parcel_gid, geom, rb.restriction_start_time, rb.restriction_end_time);
+      })
+      .then(function(res_data){
+        console.log(res_data);
+        res.status(200).send(res_data);
+      })
+      .catch(function(error){
+        console.log(error);
+        res.status(400).send(error);
+      });
     }
   },
 
@@ -68,11 +98,19 @@ module.exports = {
   /**
   * expects delete method
   * expects gid (INTEGER)
-  * invokes
+  * invokes removeParcelOwnership to delete row in owned_parcel matching given gid
   */
   'removeAddress': {
-    post: function(req, res){
-
+    delete: function(req, res){
+      rb = req.body;
+      utils.removeParcelOwnership(rb.gid)
+      .then(function(deleted){
+        if (deleted) res.status(200).send('Deleted owned_parcel row where gid='+rb.gid);
+        else res.status(400).send('Row with gid='+rb.gid+' does not exist in owned_parcel. Deleted nothing');
+      })
+      .catch(function(error){
+        res.status(400).send(error);
+      })
     }
   },
 

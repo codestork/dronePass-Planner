@@ -41,22 +41,14 @@ var getParcelGeometryText = function(gid, table){
 
 
 /**
-* input:  Geometry as Text
-* output: knex query that gives Convex Hull as Text
-*         result[0].st_astext holds convex hull
-*/
-var convertToConvexHullText = function(geoText){
-  return pg.raw("SELECT ST_AsText(ST_ConvexHull(ST_GeomFromText('"+geoText+"')))");
-}
-
-
-/**
 * input: Geometry as Text
 * output: knex query that gives Convex Hull as Raw Geometry
-*         result.rows[0].st_setsrid holds convex hull
 */
-var convertToConvexHullRaw = function(geoText){
-  return pg.raw("SELECT ST_SetSRID(ST_ConvexHull(ST_GeomFromText('"+geoText+"')), 102243)");
+var convertToConvexHull = function(geoText){
+  return pg.raw("SELECT ST_SetSRID(ST_ConvexHull(ST_GeomFromText('"+geoText+"')), 102243)")
+  .then(function(r){
+    return r.rows[0].st_setsrid;
+  });
 }
 
 
@@ -165,25 +157,33 @@ var removeLandOwner = function(id){
   .delete();
 }
 
-var addParcelOwnership = function(land_owner_id, parcel, restriction_height){
 
-  var parcelGeomQuery = "SELECT lot_geom FROM public.parcel WHERE gid=" + parcel.gid;
-  var hullContruction = "ST_ConvexHull(ST_Buffer(" + parcelGeomQuery + ", BUFFER_OFFSET))";
-  //var insertQuery = "INSERT"
-  return pg('owned_parcel')
-  .insert({
+/**
+* input:  land_owner_id (INTEGER)
+          parcel_gid    (INTEGER)
+          geom          (POLYGON GEOMETRY)
+          start         (TIME)
+          end           (TIME)
+* output: knex query inserts row in owned_parcel table 
+*         and returns the entry made along w/ the lot geometry (as wgs84)
+*/
+var addParcelOwnership = function(land_owner_id, parcel_gid, geom, start, end){
+  return pg('owned_parcel').insert({
     land_owner_id: land_owner_id,
-    parcel_gid: parcel.gid,
-
-    // knex.raw('count(*) as user_count, status')
-    // //SELECT lot_geom FROM parcel WHERE 
-    // .whereRaw("ST_Intersects(ST_GeographyFromText('SRID=4326;POINT("+longitude+" "+latitude+")'), lot_geom)");
-    // hull_geom: ST_ConvexHull(ST_Buffer(parcel.lot_geom, BUFFER_OFFSET)),
-    // restriction_height: restriction_height || 0
+    parcel_gid: parcel_gid,
+    hull_geom: geom,
+    restriction_height: 0,
+    restriction_start: start,
+    restriction_end: end
+  }, ['gid', 'land_owner_id', 'parcel_gid', 'restriction_height', 'restriction_start', 'restriction_end'])
+  .then(function(entry){
+    return getParcelGeometryJSON(entry[0].parcel_gid, 'parcel_wgs84')
+    .then(function(lot_geom){
+      entry[0].lot_geom = JSON.parse(lot_geom[0].lot_geom);
+      return entry;
+    });
   });
 }
-
-
 
 /**
 * input:  gid (INTEGER)
@@ -191,33 +191,13 @@ var addParcelOwnership = function(land_owner_id, parcel, restriction_height){
 */
 var removeParcelOwnership = function(gid){
   return pg('owned_parcel')
-  .where('gid')
+  .where('gid', gid)
   .delete();
 }
 
-/* Sample query to insert to owned_parcel table */
-// getParcelGeometryText(77677)
-// .then(function(r){
-//   return convertToConvexHullText(r[0].lot_geom)
-// })
-// .then(function(r){
-//   console.log('this is the geom')
-//   console.log(r.rows[0].st_astext)
-//   return addParcelOwnership(1234, 77676, r.rows[0].st_astext, '10:00:00', '10:00:00')
-//   .then(function(result){
-//     console.log(result);
-//   })
-//   .catch(function(error){
-//     console.log('inside')
-//     console.log(error)
-//     return error;
-//   });
-// })
-// .catch(function(error){
-//   console.log('out')
-//   console.log(error)
-//   return error;
-// })
+
+
+
 
 
 
@@ -381,17 +361,17 @@ var _whereCreation = function(where_obj) {
 
 module.exports = {
   // General
-  getParcelGeometryJSON:    getParcelGeometryJSON,
-  getParcelGeometryText:    getParcelGeometryText,
-  convertToConvexHullRaw:   convertToConvexHullRaw,
-  convertToConvexHullText:  convertToConvexHullText,
-  getParcelGid:             getParcelGid,
+  getParcelGeometryJSON:      getParcelGeometryJSON,
+  getParcelGeometryText:      getParcelGeometryText,
+  convertToConvexHull:        convertToConvexHull,
+  getParcelGid:               getParcelGid,
   // Client
-  getRestricted:      getRestricted, 
-  setRestriction:     setRestriction,
-  addLandOwner:       addLandOwner,
-  removeLandOwner:    removeLandOwner,
-  addParcelOwnership: addParcelOwnership,
+  getRestricted:              getRestricted, 
+  setRestriction:             setRestriction,
+  addLandOwner:               addLandOwner,
+  removeLandOwner:            removeLandOwner,
+  addParcelOwnership:         addParcelOwnership,
+  removeParcelOwnership:      removeParcelOwnership,
   // Drone
   addDrone:           addDrone,
   removeDrone:        removeDrone,
