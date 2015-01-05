@@ -55,12 +55,12 @@ CREATE TABLE flight_path (
 
 
 
--- Table: flight_path_buffered
-CREATE TABLE flight_path_buffered (
+-- Table: flight_path_area
+CREATE TABLE flight_path_area (
     gid serial  NOT NULL,
     flight_path_gid int  NOT NULL,
     -- buffered_geom geometry(POLYGON)  NOT NULL,
-    CONSTRAINT flight_path_buffered_pk PRIMARY KEY (gid)
+    CONSTRAINT flight_path_area_pk PRIMARY KEY (gid)
 );
 
 
@@ -168,10 +168,10 @@ ALTER TABLE owned_parcel ADD CONSTRAINT edited_parcel_parcel
     INITIALLY IMMEDIATE 
 ;
 
--- Reference:  flight_path_buffered_flight_path (table: flight_path_buffered)
+-- Reference:  flight_path_area_flight_path (table: flight_path_area)
 
 
-ALTER TABLE flight_path_buffered ADD CONSTRAINT flight_path_buffered_flight_path 
+ALTER TABLE flight_path_area ADD CONSTRAINT flight_path_area_flight_path 
     FOREIGN KEY (flight_path_gid)
     REFERENCES flight_path (gid)
     NOT DEFERRABLE 
@@ -253,7 +253,7 @@ SELECT AddGeometryColumn('drone_position', 'position_geom', 102243, 'POINT', 2, 
 SELECT AddGeometryColumn('flight_path', 'path_geom', 102243, 'LINESTRING', 2, false);
 
 -- flight path buffered will be created server side after the flight path has been accepted by the server side 
-SELECT AddGeometryColumn('flight_path_buffered', 'buffered_geom', 102243, 'POLYGON', 2, false);
+SELECT AddGeometryColumn('flight_path_area', 'buffered_geom', 102243, 'POLYGON', 2, false);
 
 -- End of file.
 
