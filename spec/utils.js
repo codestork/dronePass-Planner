@@ -66,8 +66,12 @@ describe('utils()', function () {
     });
   });
 
-  it('exists getParcelGeometry', function () {
-    expect(utils.getParcelGeometry).to.be.a('function');
+  it('exists getParcelGeometryJSON', function () {
+    expect(utils.getParcelGeometryJSON).to.be.a('function');
+  });
+
+  it('exists getParcelGeometryText', function () {
+    expect(utils.getParcelGeometryText).to.be.a('function');
   });
 
   it('exists getParcelGidByGeography', function () {
@@ -90,8 +94,59 @@ describe('utils()', function () {
     expect(utils.removeLandOwner).to.be.a('function');
   });
 
+  //****************************************************************
+  // addParcelOwnership
+  //****************************************************************
   it('exists addParcelOwnership', function () {
     expect(utils.addParcelOwnership).to.be.a('function');
+  });
+
+  it('should add row into addParcelOwnership', function(done){
+    var result;
+    var land_owner_id = 1,
+        parcel_gid = 1,
+        hull_geom = null,
+        restriction_start = '10:00:00',
+        restriction_end = '10:00:00';
+
+    utils.addParcelOwnership(land_owner_id,parcel_gid,hull_geom,restriction_start,restriction_end)
+    .then(function(entry){
+      result = entry;
+    })
+
+    setTimeout(function (){
+      expect(result.length);
+      expect(result[0].land_owner_id).to.equal(land_owner_id);
+      expect(result[0].parcel_gid).to.equal(parcel_gid);
+      expect(result[0].hull_geom).to.equal(undefined);
+      expect(result[0].restriction_height).to.equal(0);
+      expect(result[0].restriction_start).to.equal(restriction_start);
+      expect(result[0].restriction_end).to.equal(restriction_end);
+      done();
+    }, TIME_OUT);
+  });
+
+  //****************************************************************
+  // removeParcelOwnership
+  //****************************************************************
+  it('exists removeParcelOwnership', function () {
+    expect(utils.removeParcelOwnership).to.be.a('function');
+  });
+
+  it('should delete row by specified gid, removeParcelOwnership', function(done) {
+    var rows_deleted;
+    utils.addParcelOwnership(1,1,null,null,null)
+    .then(function(entry){
+      return utils.removeParcelOwnership(entry[0].gid)
+    })
+    .then(function(count){
+      rows_deleted = count;
+    })
+
+    setTimeout(function () {
+      expect(rows_deleted).to.equal(1);
+      done();
+    }, TIME_OUT);
   });
 
   it('exists getRestricted', function() {
@@ -118,7 +173,7 @@ describe('utils()', function () {
     expect(utils.addFlightPath).to.be.a('function');
   });
 
-  it('exists getFlightPath', function () {
+  xit('exists getFlightPath', function () {
     expect(utils.getFlightPath).to.be.a('function');
   });
 
@@ -134,9 +189,9 @@ describe('utils()', function () {
     }, TIME_OUT);
   });
 
-  it('should get parcel by lon lat, getParcelGeometry', function(done) {
+  it('should get parcel by lon lat, getParcelGeometryJSON', function(done) {
     var result = {};
-    utils.getParcelGeometry(77676).then(function(r){
+    utils.getParcelGeometryJSON(77676).then(function(r){
       result = r;
     });
 
@@ -247,7 +302,7 @@ describe('utils()', function () {
     }, TIME_OUT);
   });
 
-  it('should add flight path', function(done) {
+  xit('should add flight path', function(done) {
     var result;
     var linestring = { "type": "LineString", "coordinates": [ [102.0, 0.0], [103.0, 1.0], [104.0, 0.0], [105.0, 1.0] ] };
 

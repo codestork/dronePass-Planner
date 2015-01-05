@@ -19,18 +19,38 @@ var BUFFER_OFFSET = 5; // 5 METERS
 
 /**
 * input: gid, table
-* output: knex query that selects Geometry of provided gid in provided table
+* output: knex query that selects GeoJSON Geometry of provided gid in provided table
 */
-var getParcelGeometry = function(gid, table){
+var getParcelGeometryJSON = function(gid, table){
   return pg.select(st.asGeoJSON('lot_geom'))
   .from(table || 'parcel')
   .where('gid',gid);
 }
 
-// utils.getParcelGeometry(0).then(function(row) { 
-//   result = row[0];
-//   console.log(result);
-// });
+
+
+/**
+* input: gid, table
+* output: knex query that selects Text Geometry of provided gid in provided table
+*/
+var getParcelGeometryText = function(gid, table){
+  return pg.select(st.asText('lot_geom'))
+  .from(table || 'parcel')
+  .where('gid',gid);
+}
+
+
+/**
+* input: Geometry as Text
+* output: knex query that gives Convex Hull as Raw Geometry
+*/
+var convertToConvexHull = function(geoText){
+  return pg.raw("SELECT ST_SetSRID(ST_ConvexHull(ST_GeomFromText('"+geoText+"')), 102243)")
+  .then(function(r){
+    return r.rows[0].st_setsrid;
+  });
+}
+
 
 /**
 * input: long, lat
@@ -62,11 +82,20 @@ var getParcelGid = function(longitude, latitude){
   .whereRaw("ST_Contains(lot_geom, ST_Transform(ST_GeometryFromText('POINT("+longitude+" "+latitude+")',4326), 102243))");
 }
 // var d2 = new Date;
-// getParcelGid(-122.023036, 37.634351).then(function(r){
+// getParcelGid(-122.023036, 37.634351)
+// .then(function(r){
 //   d2d = new Date;
 //   console.log(r);
 //   console.log('geom',(d2d-d2)+'ms');
-// });
+//   return r;
+// })
+// .then(function(r){
+//   return getParcelGeometry(r[0].gid)
+//   .then(function(geom){
+//     return {gid:r[0].gid, geom: geom[0].lot_geom}
+//   });
+// })
+// .then(console.log);
 
 
 
@@ -120,7 +149,7 @@ var addLandOwner = function(id, login, owner_authority) {
 
 /**
 * input:  id  (INTEGER)
-* output: knex query that removes row in land_owner table with given id
+* output: knex query removes row in land_owner table with given id
 */
 var removeLandOwner = function(id){
   return pg('land_owner')
@@ -128,23 +157,42 @@ var removeLandOwner = function(id){
   .delete();
 }
 
-var addParcelOwnership = function(land_owner_id, parcel, restriction_height){
 
-  var parcelGeomQuery = "SELECT lot_geom FROM public.parcel WHERE gid=" + parcel.gid;
-  var hullContruction = "ST_ConvexHull(ST_Buffer(" + parcelGeomQuery + ", BUFFER_OFFSET))";
-  //var insertQuery = "INSERT"
-  return pg('owned_parcel')
-  .insert({
+/**
+* input:  land_owner_id (INTEGER)
+          parcel_gid    (INTEGER)
+          geom          (POLYGON GEOMETRY)
+          start         (TIME)
+          end           (TIME)
+* output: knex query inserts row in owned_parcel table 
+*         and returns the entry made (minus convex hull)
+*/
+var addParcelOwnership = function(land_owner_id, parcel_gid, geom, start, end){
+  return pg('owned_parcel').insert({
     land_owner_id: land_owner_id,
-    parcel_gid: parcel.gid,
-
-    // knex.raw('count(*) as user_count, status')
-    // //SELECT lot_geom FROM parcel WHERE 
-    // .whereRaw("ST_Intersects(ST_GeographyFromText('SRID=4326;POINT("+longitude+" "+latitude+")'), lot_geom)");
-    // hull_geom: ST_ConvexHull(ST_Buffer(parcel.lot_geom, BUFFER_OFFSET)),
-    // restriction_height: restriction_height || 0
-  });
+    parcel_gid: parcel_gid,
+    hull_geom: geom,
+    restriction_height: 0,
+    restriction_start: start,
+    restriction_end: end
+  }, ['gid', 'land_owner_id', 'parcel_gid', 'restriction_height', 'restriction_start', 'restriction_end']);
 }
+
+/**
+* input:  gid (INTEGER)
+* output: knex query removes row in owned_parcel table specified by gid
+*/
+var removeParcelOwnership = function(gid){
+  return pg('owned_parcel')
+  .where('gid', gid)
+  .delete();
+}
+
+
+
+
+
+
 
 
 
@@ -306,14 +354,18 @@ var _whereCreation = function(where_obj) {
 
 module.exports = {
   // General
-  getParcelGeometry:  getParcelGeometry,
-  getParcelGid:       getParcelGid,
+  getParcelGeometryJSON:      getParcelGeometryJSON,
+  getParcelGeometryText:      getParcelGeometryText,
+  getParcelGidByGeography:    getParcelGidByGeography, 
+  convertToConvexHull:        convertToConvexHull,
+  getParcelGid:               getParcelGid,
   // Client
-  getRestricted:      getRestricted, 
-  setRestriction:     setRestriction,
-  addLandOwner:       addLandOwner,
-  removeLandOwner:    removeLandOwner,
-  addParcelOwnership: addParcelOwnership,
+  getRestricted:              getRestricted, 
+  setRestriction:             setRestriction,
+  addLandOwner:               addLandOwner,
+  removeLandOwner:            removeLandOwner,
+  addParcelOwnership:         addParcelOwnership,
+  removeParcelOwnership:      removeParcelOwnership,
   // Drone
   addDrone:           addDrone,
   removeDrone:        removeDrone,
