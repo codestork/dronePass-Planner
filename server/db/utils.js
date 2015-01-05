@@ -2,6 +2,7 @@ var pg = require('./config.js');
 var st = require('knex-postgis')(pg);
 
 var BUFFER_OFFSET = 5; // 5 METERS
+
 /**
 * All of the utility functions return a knex query
 * 
@@ -58,7 +59,7 @@ var getParcelGidByGeography = function(longitude, latitude){
 var getParcelGid = function(longitude, latitude){
   return pg.select('gid')
   .from('parcel')
-  .whereRaw("ST_Contains(ST_SetSRID(lot_geom, 102243), ST_Transform(ST_GeometryFromText('POINT("+longitude+" "+latitude+")',4326), 102243))");
+  .whereRaw("ST_Contains(lot_geom, ST_Transform(ST_GeometryFromText('POINT("+longitude+" "+latitude+")',4326), 102243))");
 }
 // var d2 = new Date;
 // getParcelGid(-122.023036, 37.634351).then(function(r){
@@ -96,10 +97,10 @@ var setRestriction = function(land_owner_id, parcel_gid, start_time, end_time){
 }
 
 
-var getRestricted = function(whereParameters) {
+var getRestricted = function(where_obj) {
   return pg.select(['restriction_start', 'restriction_start'])
   .from('owned_parcel')
-  .where(whereParameters);
+  .where(where_obj);
 }
 
 /**
@@ -127,7 +128,23 @@ var removeLandOwner = function(id){
   .delete();
 }
 
+var addParcelOwnership = function(land_owner_id, parcel, restriction_height){
 
+  var parcelGeomQuery = "SELECT lot_geom FROM public.parcel WHERE gid=" + parcel.gid;
+  var hullContruction = "ST_ConvexHull(ST_Buffer(" + parcelGeomQuery + ", BUFFER_OFFSET))";
+  //var insertQuery = "INSERT"
+  return pg('owned_parcel')
+  .insert({
+    land_owner_id: land_owner_id,
+    parcel_gid: parcel.gid,
+
+    // knex.raw('count(*) as user_count, status')
+    // //SELECT lot_geom FROM parcel WHERE 
+    // .whereRaw("ST_Intersects(ST_GeographyFromText('SRID=4326;POINT("+longitude+" "+latitude+")'), lot_geom)");
+    // hull_geom: ST_ConvexHull(ST_Buffer(parcel.lot_geom, BUFFER_OFFSET)),
+    // restriction_height: restriction_height || 0
+  });
+}
 
 
 
@@ -140,12 +157,58 @@ var removeLandOwner = function(id){
 *         max velocity
 * output: knex query that inserts a row to drone table
 */
-var addDrone = function(type, max_vel){
+var addDrone = function(type, max_vel) {
   return pg('drone')
   .insert({
     drone_type: type,
     max_velocity: max_vel
   });
+}
+
+var removeDrone = function(id) {
+  return pg('drone')
+  .where('id',id)
+  .delete();
+}
+
+// var getDrone = function(where_obj) {
+//   return pg.select('*')
+//   .from('drone')
+//   .where(where_obj);
+// }
+
+var addDroneOperator = function(operator_name) {
+  return pg('drone_operator')
+  .insert({
+    operator_name: operator_name
+  });
+}
+
+var removeDroneOperator = function(id){
+  return pg('drone_operator')
+  .where('id',id)
+  .delete();
+}
+
+
+// CREATE TABLE flight_path (
+//    gid serial  NOT NULL,
+//    drone_id int  NOT NULL,
+//    drone_operator_id int  NOT NULL,
+//    path_geom geometry(LINESTRING)  NOT NULL,
+//    flight_start timestamp  NOT NULL DEFAULT '-infinity'::timestamp without time zone CHECK (flight_start < flight_end),
+//    flight_end timestamp  NOT NULL DEFAULT 'infinity'::timestamp without time zone CHECK (flight_start < flight_end),
+//    CONSTRAINT flight_path_pk PRIMARY KEY (id)
+// );
+var addFlightPath = function(drone_id, drone_operator_id, linestring_wgs84, flight_start, flight_end) {
+  return pg('flight_path')
+  .insert({
+    id: id,
+    login: login,
+    owner_authority: owner_authority
+  });
+
+  // insert into flight_path_buffered
 }
 
 /**
@@ -176,5 +239,8 @@ module.exports = {
   removeLandOwner:    removeLandOwner,
   addParcelOwnership: addParcelOwnership,
   // Drone
-  addDrone:           addDrone
+  addDrone:           addDrone,
+  removeDrone:        removeDrone,
+  addDroneOperator:   addDroneOperator,
+  removeDroneOperator:removeDroneOperator
 }
