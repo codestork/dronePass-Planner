@@ -165,6 +165,10 @@ var addDrone = function(type, max_vel) {
   });
 }
 
+/**
+* input:  id
+* output: knex query that removes a row in the drone table
+*/
 var removeDrone = function(id) {
   return pg('drone')
   .where('id',id)
@@ -177,6 +181,10 @@ var removeDrone = function(id) {
 //   .where(where_obj);
 // }
 
+/**
+* input:  operator_name   (VARCHAR)
+* output: knex query that inserts a drone operator into the drone_operator table
+*/
 var addDroneOperator = function(operator_name) {
   return pg('drone_operator')
   .insert({
@@ -184,6 +192,10 @@ var addDroneOperator = function(operator_name) {
   });
 }
 
+/**
+* input:  id
+* output: knex query that removes a row in the drone_operator table
+*/
 var removeDroneOperator = function(id){
   return pg('drone_operator')
   .where('id',id)
@@ -191,32 +203,77 @@ var removeDroneOperator = function(id){
 }
 
 
-// CREATE TABLE flight_path (
-//    gid serial  NOT NULL,
-//    drone_id int  NOT NULL,
-//    drone_operator_id int  NOT NULL,
-//    path_geom geometry(LINESTRING)  NOT NULL,
-//    flight_start timestamp  NOT NULL DEFAULT '-infinity'::timestamp without time zone CHECK (flight_start < flight_end),
-//    flight_end timestamp  NOT NULL DEFAULT 'infinity'::timestamp without time zone CHECK (flight_start < flight_end),
-//    CONSTRAINT flight_path_pk PRIMARY KEY (id)
-// );
-var addFlightPath = function(drone_id, drone_operator_id, linestring_wgs84, flight_start, flight_end) {
-  return pg('flight_path')
-  .insert({
-    id: id,
-    login: login,
-    owner_authority: owner_authority
-  });
+/**
+* input:  drone_id,  the id of the associated drone
+          drone_operator_id, the id of the associated operator
+          flight_start, the ISO string for the start date of the flight
+          flight_end, the ISO string for th end date for the flight
+          linestring_wgs84 the GeoJSON string for the proposed geometry.
+* output: knex query that removes a row in the drone_operator table
+*/
+var addFlightPath = function(drone_id, drone_operator_id, flight_start, flight_end, linestring_wgs84) {
+  var insertLine = 'INSERT INTO flight_path (drone_id, drone_operator_id, flight_start, flight_end, path_geom)';
+  var linestringValue = 'ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(' + linestring_wgs84 + '),4326),102243)';
+  var valuesLine = 'VALUES (' + drone_id + ',' + drone_operator_id + ',' + flight_start + ',' + flight_end + ',' + linestringValue +')';
+  var rawQuery = insertLine + ' ' + valuesLine + ' ' + 'RETURNING gid;'
 
-  // insert into flight_path_buffered
+  // Create a buffered version of the polygon
+
+  // test the buffered version of the polygon against the currently restricted parcels
+
+    // if their is a restriction maybe return the restricted geometries?
+
+    // if there is no restriction return the geometry?
+
+  return pg.raw(rawQuery);
 }
 
+
+// var getFlightPath = function(where_obj) {
+//   return pg.select('*')
+//   .from('flight_path')
+//   .where(where_obj);
+// }
+
 /**
-* input: plan (line string)
-* output: knex query that checks if string intersects with restricted
-*         properties
+* input:  object of key value pairs that indicate equalities that must be met.
+* output: knex query that searches for geometries that meet 'where' requirements.
+*         To get the geometry you must access the __obj__.rows[#].st_asgeojson
+*         below is an example object:
+*           { command: 'SELECT',
+              rowCount: 1,
+              oid: NaN,
+              rows: [ { st_asgeojson: '{"type":"LineString","coordinates":[[102,0.000000000000013],[103,0.999999999986567],[104,0.000000000000013],[105,0.999999999986567]]}' } ],
+              fields: 
+                [ { name: 'st_asgeojson',
+                    tableID: 0,
+                    columnID: 0,
+                    dataTypeID: 25,
+                    dataTypeSize: -1,
+                    dataTypeModifier: -1,
+                    format: 'text' } ],
+              _parsers: [ [Function] ],
+              RowCtor: [Function],
+              rowAsArray: false,
+              _getTypeParser: [Function] 
+            }
 */
-// var isFlightPlanConflictFree = function(plan){}
+var getFlighPathGeom = function(where_obj) {
+  var selectLine = 'SELECT ST_AsGeoJSON(ST_Transform(path_geom, 4326))';
+  var fromLine = 'FROM flight_path';
+  var whereLine = _whereCreation(where_obj);
+  var rawQuery = selectLine + ' ' + fromLine + ' ' + whereLine + ';';
+  return pg.raw(rawQuery);
+}
+
+// var getDroneFlightPath = function(where_obj) {
+// }
+
+// var getOperatorFlightPath = function(where_obj) {
+// }
+
+// var getFlightPathArea = function(where_obj) {
+//}
 
 
 
@@ -224,8 +281,27 @@ var addFlightPath = function(drone_id, drone_operator_id, linestring_wgs84, flig
 
 
 
+//*************************************************************************
+//        HELPERS
+//*************************************************************************
 
+var _whereCreation = function(where_obj) {
+  var whereLine = 'WHERE';
+  var firstWhereStatement = false;
+  for (key in where_obj) {
+    if (!firstWhereStatement) {
+      firstWhereStatement = true;
+    } else {
+      whereLine += 'AND';
+    }
+    whereLine += ' ';
+    whereLine += key;
+    whereLine += '=';
+    whereLine += where_obj[key];
+  }
 
+  return whereLine;
+}
 
 
 module.exports = {
@@ -242,5 +318,8 @@ module.exports = {
   addDrone:           addDrone,
   removeDrone:        removeDrone,
   addDroneOperator:   addDroneOperator,
-  removeDroneOperator:removeDroneOperator
+  removeDroneOperator:removeDroneOperator,
+  addFlightPath:      addFlightPath,
+  //getFlightPath:      getFlightPath,
+  getFlighPathGeom:   getFlighPathGeom
 }
