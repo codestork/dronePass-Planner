@@ -112,14 +112,14 @@ psql -d dronepassdbtest -a -f Drone_Pass_Control_create.sql
 ```
 
 ### Cleaning up the Alameda county data
-Alameda county has a number of columns that are not of any use to DronePass. The Drop_Extra_Alameda_Cols.sql file drops all those tables that are not to be used.
+Alameda county has a number of columns that are not of any use to DronePass. The `Prepare_Parcel_Data.sql` file drops all those columns that are not to be used. There is also a spatial index on public.parcel lot_geom that is applied by the `Prepare_Parcel_Data.sql` file.
 
 ```base
- psql -d dronepass -a -f Drop_Extra_Alameda_Cols.sql
+ psql -d dronepass -a -f Prepare_Parcel_Data.sql
 ```
 
 ```base
- psql -d dronepassdbtest -a -f Drop_Extra_Alameda_Cols.sql
+ psql -d dronepassdbtest -a -f Prepare_Parcel_Data.sql
 ```
 
 Afterwards your tables should look like the following:
