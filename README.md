@@ -68,7 +68,7 @@ public    | spatial_ref_sys | table  | dronepass
 
 
 ### Copying alameda county data into databases
-As of the writing of this README(Dec 31, 2014) the data for alameda county is located at the county's [geospatial map files portal](https://www.acgov.org/government/geospatial.htm), the zip file is located at the following address: [https://www.acgov.org/maps/geospatial/geospatial.zip](https://www.acgov.org/maps/geospatial/geospatial.zip). The file is a 200Mb zip file that contains an ESRI shapefile representation of the parcel data. If you don't have a GUI client you will need to download the file via lynx (`brew install lynx`) in order to get this data into your database server. If using lynx to save the data to your current directory: 
+As of the writing of this README(Dec 31, 2014) the data for alameda county is located at the county's [geospatial map files portal](https://www.acgov.org/government/geospatial.htm), the zip file is located at the following address: [https://www.acgov.org/maps/geospatial/geospatial.zip](https://www.acgov.org/maps/geospatial/geospatial.zip). The file is a 200Mb zip file that contains an ESRI shapefile representation of the parcel data. If you don't have a GUI client you will need to download the file via lynx (`$ brew install lynx`) in order to get this data into your database server. If using lynx to save the data to your current directory: 
 
 ```bash
 $ lynx -source https://www.acgov.org/maps/geospatial/geospatial.zip > geospatial.zip
