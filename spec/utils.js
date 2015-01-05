@@ -112,7 +112,15 @@ describe('utils()', function () {
 
   it('exists removeDroneOperator', function () {
     expect(utils.removeDroneOperator).to.be.a('function');
-  });      
+  });
+
+  it('exists addFlightPath', function () {
+    expect(utils.addFlightPath).to.be.a('function');
+  });
+
+  it('exists getFlightPath', function () {
+    expect(utils.getFlightPath).to.be.a('function');
+  });
 
   it('should get parcel by lon lat, getParcelGid', function(done) {
     var result = {};
@@ -240,16 +248,43 @@ describe('utils()', function () {
   });
 
   it('should add flight path', function(done) {
+    var result;
+    var linestring = { "type": "LineString", "coordinates": [ [102.0, 0.0], [103.0, 1.0], [104.0, 0.0], [105.0, 1.0] ] };
+
+    utils.addDrone(DRONE_TYPE, 4).returning('id').then(function(r) {
+      var drone_id = r[0];
+      utils.addDroneOperator(DRONE_OPERATOR_NAME).returning('id').then(function(r){
+        var drone_operator_id = r[0];
+        utils.addFlightPath(drone_id, drone_operator_id, "'1999-01-08 04:05:06'", "'1999-01-08 05:05:06'", "'" + JSON.stringify(linestring) + "'").exec(function(err, r) {
+          if (err) {
+            expect(false).to.equal(err);
+            return;
+          }
+          
+          utils.getFlighPathGeom({gid: r.rows[0].gid}).exec(function(err, rows) {
+            //console.log(rows);
+            result = JSON.parse(rows.rows[0].st_asgeojson);
+          });
+        });
+      });
+    });
+
     setTimeout(function() {
-      expect(false).to.equal(true);
+      var resCoords = result.coordinates;
+      var origCoords = linestring.coordinates;
+      for (var i = 0; i < origCoords.length; i++) {
+        for (var j = 0; j < origCoords[i].length; j++) {
+          expect(resCoords[i][j]).to.be.closeTo(origCoords[i][j], 0.01);
+        }
+      }
       done();
     }, TIME_OUT);
   });
 
-  it('should remove flight path?', function(done) {
-    setTimeout(function() {
-      expect(false).to.equal(true);
-      done();
-    }, TIME_OUT);
-  });          
+  // it('should remove flight path?', function(done) {
+  //   setTimeout(function() {
+  //     expect(false).to.equal(true);
+  //     done();
+  //   }, TIME_OUT);
+  // });          
 });
