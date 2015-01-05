@@ -364,13 +364,7 @@ describe('utils()', function () {
       utils.addDroneOperator(DRONE_OPERATOR_NAME).returning('id').then(function(r){
         var drone_operator_id = r[0];
         utils.addFlightPath(drone_id, drone_operator_id, "'1999-01-08 04:05:06'", "'1999-01-08 05:05:06'", "'" + JSON.stringify(linestring) + "'").exec(function(err, r) {
-          if (err) {
-            expect(false).to.equal(err);
-            return;
-          }
-          
           utils.getFlighPathGeom({gid: r.rows[0].gid}).exec(function(err, rows) {
-            //console.log(rows);
             result = JSON.parse(rows.rows[0].st_asgeojson);
           });
         });
