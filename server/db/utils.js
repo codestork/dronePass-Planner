@@ -165,7 +165,7 @@ var removeLandOwner = function(id){
           start         (TIME)
           end           (TIME)
 * output: knex query inserts row in owned_parcel table 
-*         and returns the entry made along w/ the lot geometry (as wgs84)
+*         and returns the entry made (minus convex hull)
 */
 var addParcelOwnership = function(land_owner_id, parcel_gid, geom, start, end){
   return pg('owned_parcel').insert({
@@ -175,14 +175,7 @@ var addParcelOwnership = function(land_owner_id, parcel_gid, geom, start, end){
     restriction_height: 0,
     restriction_start: start,
     restriction_end: end
-  }, ['gid', 'land_owner_id', 'parcel_gid', 'restriction_height', 'restriction_start', 'restriction_end'])
-  .then(function(entry){
-    return getParcelGeometryJSON(entry[0].parcel_gid, 'parcel_wgs84')
-    .then(function(lot_geom){
-      entry[0].lot_geom = JSON.parse(lot_geom[0].lot_geom);
-      return entry;
-    });
-  });
+  }, ['gid', 'land_owner_id', 'parcel_gid', 'restriction_height', 'restriction_start', 'restriction_end']);
 }
 
 /**
@@ -363,6 +356,7 @@ module.exports = {
   // General
   getParcelGeometryJSON:      getParcelGeometryJSON,
   getParcelGeometryText:      getParcelGeometryText,
+  getParcelGidByGeography:    getParcelGidByGeography, 
   convertToConvexHull:        convertToConvexHull,
   getParcelGid:               getParcelGid,
   // Client

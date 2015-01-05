@@ -71,17 +71,28 @@ module.exports = {
       } else {
         console.log('coordinates missing');
       }
+      // Get gid of parcel that contains given coordinates
       utils.getParcelGid(rb.coordinates[0], rb.coordinates[1])
       .then(function(result){
         console.log('found parcel gid', result[0].gid);
         return parcel_gid = result[0].gid;
       })
+      // Get geometry of that parcel and compute convex hull of it
       .then(utils.getParcelGeometryText)
       .then(function(result){
         return utils.convertToConvexHull(result[0].lot_geom);
       })
+      // All the data is ready. Now inserts row to owned_parcel
       .then(function(geom){
         return utils.addParcelOwnership(rb.user_id, parcel_gid, geom, rb.restriction_start_time, rb.restriction_end_time);
+      })
+      // Prepare response package
+      .then(function(entry){
+        return utils.getParcelGeometryJSON(entry[0].parcel_gid, 'parcel_wgs84')
+        .then(function(lot_geom){
+          entry[0].lot_geom = JSON.parse(lot_geom[0].lot_geom);
+          return entry;
+        });
       })
       .then(function(res_data){
         console.log(res_data);
