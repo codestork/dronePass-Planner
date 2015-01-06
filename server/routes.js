@@ -124,7 +124,7 @@ module.exports = {
     }
   },
 
-  'togglePermissions': {
+  'updatePermission': {
     post: function(req, res){
 
     }
