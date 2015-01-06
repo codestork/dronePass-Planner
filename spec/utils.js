@@ -291,7 +291,9 @@ describe('utils()', function () {
     var count = 0;
     var droneId = -1;
     
-    utils.addDrone(DRONE_TYPE, 4).returning('id').then(function(r) {
+    utils.addDrone(call_sign, DRONE_TYPE, 4)
+    .returning('id')
+    .then(function(r) {
       DRONE_ID = r[0];
       pg('drone').count('id').then(function(c) {
         count = c;
