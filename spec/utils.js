@@ -81,9 +81,30 @@ describe('utils()', function () {
   it('exists getParcelGid', function () {
     expect(utils.getParcelGid).to.be.a('function');
   });
-
+  //****************************************************************
+  // setRestriction
+  //****************************************************************
   it('exists setRestriction', function () {
     expect(utils.setRestriction).to.be.a('function');
+  });
+
+  it('should update row in owned_parcel', function(done){
+    var start_time = '11:00:00', end_time= '15:00:00';
+    var result;
+    utils.addParcelOwnership(1,1,null,'05:00:00','10:00:00')
+    .then(function(entry){
+      utils.setRestriction(entry[0].parcel_gid, start_time, end_time)
+      .then(function(updated_entry){
+        result = updated_entry;
+      });
+    });
+
+    setTimeout(function(){
+      utils.removeParcelOwnership(result[0].gid)
+      .then(function(){
+        done();
+      });
+    }, TIME_OUT);
   });
 
   it('exists addLandOwner', function () {
@@ -122,7 +143,11 @@ describe('utils()', function () {
       expect(result[0].restriction_height).to.equal(0);
       expect(result[0].restriction_start).to.equal(restriction_start);
       expect(result[0].restriction_end).to.equal(restriction_end);
-      done();
+      // this is troubling... need to clean up everything
+      utils.removeParcelOwnership(result[0].gid)
+      .then(function(){
+        done();
+      });
     }, TIME_OUT);
   });
 
@@ -149,7 +174,10 @@ describe('utils()', function () {
     }, TIME_OUT);
   });
 
-  it('exists getRestricted', function() {
+  //****************************************************************
+  // getRestriction
+  //****************************************************************
+  xit('exists getRestriction', function() {
     expect(utils.getRestricted).to.be.a('function');
   });
 

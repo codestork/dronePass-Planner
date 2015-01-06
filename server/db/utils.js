@@ -114,19 +114,19 @@ var getParcelGid = function(longitude, latitude){
 * input: parcel, start_time, duration
 * output:
 */
-var setRestriction = function(land_owner_id, parcel_gid, start_time, end_time){
+var setRestriction = function(parcel_gid, start_time, end_time){
   return pg('owned_parcel')
   .where({
-    'land_owner_id' : land_owner_id,
-    'parcel_gid' : parcel_gid})
+    'parcel_gid' : parcel_gid
+  })
   .update({
     restriction_start: start_time,
     restriction_end: end_time
-  });
+  }, ['gid','land_owner_id','parcel_gid','restriction_start','restriction_end'])
 }
 
 
-var getRestricted = function(where_obj) {
+var getRestriction = function(where_obj) {
   return pg.select(['restriction_start', 'restriction_start'])
   .from('owned_parcel')
   .where(where_obj);
@@ -360,7 +360,7 @@ module.exports = {
   convertToConvexHull:        convertToConvexHull,
   getParcelGid:               getParcelGid,
   // Client
-  getRestricted:              getRestricted, 
+  getRestriction:             getRestriction, 
   setRestriction:             setRestriction,
   addLandOwner:               addLandOwner,
   removeLandOwner:            removeLandOwner,

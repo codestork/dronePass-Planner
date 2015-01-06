@@ -15,11 +15,12 @@ module.exports = {
   /**
   * expects post method
   * expects user_id (INTEGER), login (STRING), and owner_authority (INTEGER)
+  *
   * invokes addLandOwner to insert row to land_owner table
   */
   'registerUser': {
     post: function(req, res){
-      rb = req.body;
+      var rb = req.body;
       utils.addLandOwner(rb.user_id, rb.login, rb.owner_authority)
       .then(function(result){
         res.status(200).send(result);
@@ -34,6 +35,7 @@ module.exports = {
   /**
   * expects delete method
   * expects user_id (INTEGER)
+  *
   * invokes removeLandOwner to delete row where id == user_id
   */
   'removeUser/:user_id': {
@@ -56,13 +58,14 @@ module.exports = {
   *         coordinates             (TUPLE)
   *         restriction_start_time  (TIME)
   *         restriction_end_time    (TIME)
+  *
   * Finds the gid of given coordinates
   * Creates Hull Geometry of found gid's geometry
   * Inserts row into owned_parcel with given & found information
   */
   'registerAddress': {
     post: function(req, res){
-      rb = req.body;
+      var rb = req.body;
       var parcel_gid, geom;
       if (rb.coordinates) {
         console.log('coordinates received...');
@@ -109,6 +112,7 @@ module.exports = {
   /**
   * expects delete method
   * expects gid (INTEGER)
+  *
   * invokes removeParcelOwnership to delete row in owned_parcel matching given gid
   */
   'removeAddress/:gid': {
@@ -120,13 +124,28 @@ module.exports = {
       })
       .catch(function(error){
         res.status(400).send(error);
-      })
+      });
     }
   },
 
-  'togglePermissions': {
+  /**
+  * expects post method
+  * expects parcel_gid              (INTEGER)
+  *         restriction_start_time  (TIME)
+  *         restriction_end_time    (TIME)
+  *
+  * invokes setRestriction to update permission times for specified row (by parcel_gid)
+  */
+  'updatePermission': {
     post: function(req, res){
-
+      var rb = req.body;
+      utils.setRestriction(rb.parcel_gid, rb.restriction_start_time, rb.restriction_end_time)
+      .then(function(updated_entry){
+        res.status(200).send(updated_entry);
+      })
+      .catch(function(error){
+        res.status(400).send(error);
+      });
     }
   },
 
