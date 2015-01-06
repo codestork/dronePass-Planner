@@ -294,11 +294,43 @@ var addFlightPath = function(drone_id, drone_operator_id, flight_start, flight_e
   //.from('parcel')
   //.whereRaw("ST_Contains(lot_geom, ST_Transform(ST_GeometryFromText('POINT("+longitude+" "+latitude+")',4326), 102243))");
   var linestringValue = 'ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(' + linestring_wgs84 + '),4326),102243)';
-  var intersectLine = 'ST_Intersects(' + linestringValue + ',' + 'lot_geom' + ')';
-
+  var intersectLine = 'ST_Intersects(' + linestringValue + ',' + 'hull_geom' + ')';
+  var restrictionOverlap = "('" + flight_start + "'::time, '" + flight_end + "'::time) OVERLAPS (restriction_start::time, restriction_end::time)";
+  var rawQuery = /*intersectLine + ' AND ' +*/ restrictionOverlap + ';';
+  console.log(rawQuery);
   return pg.select('gid')
-    .from('parcel')
-    .whereRaw(intersectLine);//.
+    .from('owned_parcel')
+    .whereRaw(rawQuery);
+    // .then(function(rows) {
+
+    // })
+  // select gid
+  // where 
+  // true (intersects)
+  // and
+  // true ((flight_start, flight_end) OVERLAPS (restriction_start, restriction_end))
+  // and 
+  // not true (gid===owned_parcel_id && drone_id===(flight_start, flight_end) OVERLAPS (restriction_start, restriction_end)
+
+// gid                | integer                | not null default nextval('owned_parcel_gid_seq'::regclass)
+//  land_owner_id      | integer                | not null
+//  parcel_gid         | integer                | not null
+//  restriction_height | integer                | 
+//  restriction_start  | time without time zone | 
+//  restriction_end    | time without time zone | 
+//  hull_geom          | geometry               | 
+
+
+  pg.select('gid')
+    .from('owned_parcel')
+    .whereRaw(intersectLine)
+    .then(function(rows) {
+      if (rows.length > 0) {
+        for (var i = 0; i < rows.length; i++) {
+
+        }
+      }
+    })
     //then(function(rows) {
     // if their is a restriction maybe return the restricted geometries?
     // if there is no restriction return the geometry
