@@ -140,8 +140,8 @@ module.exports = {
     post: function(req, res){
       var rb = req.body;
       utils.setRestriction(rb.parcel_gid, rb.restriction_start_time, rb.restriction_end_time)
-      .then(function(updated_entry){
-        res.status(200).send(updated_entry);
+      .then(function(updatedEntry){
+        res.status(200).send(updatedEntry);
       })
       .catch(function(error){
         res.status(400).send(error);
@@ -164,8 +164,8 @@ module.exports = {
     post: function(req, res){
       var rb = req.body;
       utils.addRestrictionExemption(rb.drone_id, rb.owned_parcel_gid, rb.restriction_start_time, rb.restriction_end_time)
-      .then(function(new_entry){
-        res.status(200).send(new_entry);
+      .then(function(newEntry){
+        res.status(200).send(newEntry);
       })
       .catch(function(error){
         res.status(400).send(error);
@@ -191,6 +191,50 @@ module.exports = {
       .catch(function(error){
         res.status(400).send(error);
       })
+    }
+  },
+
+
+  /**
+  * expects post method
+  * expects callSign    (VARCHAR)
+  *         droneType   (VARCHAR)
+  *         maxVelocity (INTEGER)
+  *
+  * Invokes addDrone to add row to Drone table
+  * sends back new entry or error         
+  */
+  'registerDrone': {
+    post: function(req, res){
+      var rb = req.body;
+      utils.addDrone(rb.callSign, rb.droneType, rb.maxVelocity)
+      .then(function(newEntry){
+        res.status(200).send(newEntry);
+      })
+      .catch(function(error){
+        res.status(400).send(error);
+      });
+    }
+  },
+
+
+  /**
+  * expects delete method
+  * expects callSign (VARCHAR)
+  *
+  * Invokes removeDrone to delete row in Drone table
+  * that matches callSign, returns how many rows deleted
+  */
+  'removeDrone/:generic_id': {
+    delete: function(req, res){
+      utils.removeDrone(req.generic_id)
+      .then(function(deleted){
+        if (deleted) res.status(200).send('Deleted drone '+req.generic_id);
+        else res.status(400).send('Could not find drone '+req.generic_id+'. Nothing deleted');
+      })
+      .catch(function(error){
+        res.status(400).send(error);
+      });
     }
   }
 
