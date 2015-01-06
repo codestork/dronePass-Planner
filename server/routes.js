@@ -38,12 +38,12 @@ module.exports = {
   *
   * invokes removeLandOwner to delete row where id == user_id
   */
-  'removeUser/:user_id': {
+  'removeUser/:generic_id': {
     delete: function(req, res){
-      utils.removeLandOwner(req.user_id)
+      utils.removeLandOwner(req.generic_id)
       .then(function(deleted){
-        if (deleted) res.status(200).send('Removed user '+req.user_id+' from land_owner table');
-        else res.status(400).send('No user with id# '+req.user_id+' to delete');
+        if (deleted) res.status(200).send('Removed user '+req.generic_id+' from land_owner table');
+        else res.status(400).send('No user with id# '+req.generic_id+' to delete');
       })
       .catch(function(error){
         res.status(400).send(error);
@@ -115,12 +115,12 @@ module.exports = {
   *
   * invokes removeParcelOwnership to delete row in owned_parcel matching given gid
   */
-  'removeAddress/:gid': {
+  'removeAddress/:generic_id': {
     delete: function(req, res){
-      utils.removeParcelOwnership(req.gid)
+      utils.removeParcelOwnership(req.generic_id)
       .then(function(deleted){
-        if (deleted) res.status(200).send('Deleted owned_parcel row where gid='+req.gid);
-        else res.status(400).send('Row with gid='+req.gid+' does not exist in owned_parcel. Deleted nothing');
+        if (deleted) res.status(200).send('Deleted owned_parcel row where gid='+req.generic_id);
+        else res.status(400).send('Row with gid='+req.generic_id+' does not exist in owned_parcel. Deleted nothing');
       })
       .catch(function(error){
         res.status(400).send(error);
@@ -149,14 +149,48 @@ module.exports = {
     }
   },
 
-  'setException': {
-    get: function(req, res){
+
+  /**
+  * expects post method
+  * expects drone_id                (INTEGER)
+  *         owned_parcel_gid        (INTEGER)
+  *         restriction_start_time  (TIMESTAMP)
+  *         restriction_end_time    (TIMESTAMP)
+  *
+  * invokes addRestrictionExemption to add a join between a drone and a parcel
+  * with a restriction time interval
+  */
+  'setExemption': {
+    post: function(req, res){
+      var rb = req.body;
+      utils.addRestrictionExemption(rb.drone_id, rb.owned_parcel_gid, rb.restriction_start_time, rb.restriction_end_time)
+      .then(function(new_entry){
+        res.status(200).send(new_entry);
+      })
+      .catch(function(error){
+        res.status(400).send(error);
+      });
     }
   },
 
-  'removeException': {
-    post: function(req, res){
 
+  /**
+  * expects delete method
+  * expects id   (INTEGER)
+  *
+  * invokes removeRestrictionExemption to delete row in restriction_exemption table
+  * where id matches
+  */
+  'removeExemption/:generic_id': {
+    delete: function(req, res){
+      utils.removeRestrictionExemption(req.generic_id)
+      .then(function(deleted){
+        if (deleted) res.status(200).send('Deleted restriction_exemption row where id='+req.generic_id);
+        else res.status(400).send('No restriction_exemption row where id='+req.generic_id+'. Nothing deleted.');
+      })
+      .catch(function(error){
+        res.status(400).send(error);
+      })
     }
   }
 
