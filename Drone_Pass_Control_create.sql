@@ -9,9 +9,10 @@
 -- tables
 -- Table: drone
 CREATE TABLE drone (
-    id serial  NOT NULL,
-    drone_type char(64)  NOT NULL,
-    max_velocity int  NOT NULL,
+    id serial NOT NULL,
+    call_sign varchar(32) NOT NULL,
+    drone_type varchar(64) NOT NULL,
+    max_velocity int NOT NULL,
     CONSTRAINT drone_pk PRIMARY KEY (id)
 );
 
