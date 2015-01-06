@@ -227,25 +227,27 @@ var removeRestrictionExemption = function(id){
 //*************************************************************************
 
 /**
-* input:  drone type
+* input:  call sign
+*         drone type
 *         max velocity
 * output: knex query that inserts a row to drone table
 */
-var addDrone = function(type, max_vel) {
+var addDrone = function(callSign, droneType, maxVelocity) {
   return pg('drone')
   .insert({
-    drone_type: type,
-    max_velocity: max_vel
-  }, ['id', 'drone_type', 'max_velocity']);
+    call_sign: callSign,
+    drone_type: droneType,
+    max_velocity: maxVelocity
+  }, ['id', 'call_sign', 'drone_type', 'max_velocity']);
 }
 
 /**
-* input:  id
+* input:  call sign
 * output: knex query that removes a row in the drone table
 */
-var removeDrone = function(id) {
+var removeDrone = function(callSign) {
   return pg('drone')
-  .where('id',id)
+  .where('call_sign',callSign)
   .delete();
 }
 
