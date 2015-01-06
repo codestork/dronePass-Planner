@@ -81,6 +81,7 @@ describe('utils()', function () {
   it('exists getParcelGid', function () {
     expect(utils.getParcelGid).to.be.a('function');
   });
+
   //****************************************************************
   // setRestriction
   //****************************************************************
@@ -180,6 +181,28 @@ describe('utils()', function () {
   xit('exists getRestriction', function() {
     expect(utils.getRestricted).to.be.a('function');
   });
+
+
+  //****************************************************************
+  // setExemption & getExemption
+  //****************************************************************
+  it('exists addRestrictionExemption', function() {
+    expect(utils.addRestrictionExemption).to.be.a('function');
+  });
+
+  it('exists removeRestrictionExemption', function() {
+    expect(utils.removeRestrictionExemption).to.be.a('function');
+  });
+
+  xit('should insert row into restriction_exemption and delete row', function(done) {
+    
+    setTimeout(function(){
+      done();
+    }, TIME_OUT);
+  });
+
+
+
 
   it('exists addDrone', function () {
     expect(utils.addDrone).to.be.a('function');

@@ -189,7 +189,33 @@ var removeParcelOwnership = function(gid){
 }
 
 
+/**
+* input:  drone_id           (INTEGER)
+*         owned_parcel_gid   (INTEGER)
+*         exemption_start    (TIMESTAMP)
+*         exemption_end      (TIMESTAMP)
+* output: knex query adds row in restriction_exemption table
+*/
+var addRestrictionExemption = function(drone_id, owned_parcel_gid, exemption_start, exemption_end){
+  return pg('restriction_exemption')
+  .insert({
+    drone_id: drone_id,
+    owned_parcel_gid: owned_parcel_gid,
+    exemption_start: exemption_start,
+    exemption_end: exemption_end
+  }, ['id', 'drone_id', 'owned_parcel_gid', 'exemption_start', 'exemption_end'])
+}
 
+
+/**
+* input: id (INTEGER)
+* output: knex query removes row in restriction_exemption table specified by id
+*/
+var removeRestrictionExemption = function(id){
+  return pg('restriction_exemption')
+  .where('id', id)
+  .delete();
+}
 
 
 
@@ -210,7 +236,7 @@ var addDrone = function(type, max_vel) {
   .insert({
     drone_type: type,
     max_velocity: max_vel
-  });
+  }, ['id', 'drone_type', 'max_velocity']);
 }
 
 /**
@@ -366,6 +392,8 @@ module.exports = {
   removeLandOwner:            removeLandOwner,
   addParcelOwnership:         addParcelOwnership,
   removeParcelOwnership:      removeParcelOwnership,
+  addRestrictionExemption:    addRestrictionExemption,
+  removeRestrictionExemption: removeRestrictionExemption,
   // Drone
   addDrone:           addDrone,
   removeDrone:        removeDrone,
