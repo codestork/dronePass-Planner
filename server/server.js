@@ -21,5 +21,14 @@ for(var route in routes){
   }
 }
 
+app.param('gid',function(req,res,next,gid){
+  req.gid = gid;
+  next();
+});
+app.param('user_id',function(req,res,next,user_id){
+  req.user_id = user_id;
+  next();
+});
+
 app.listen(port);
 console.log("dronePass-Planner now logged into port",port);

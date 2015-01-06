@@ -36,12 +36,12 @@ module.exports = {
   * expects user_id (INTEGER)
   * invokes removeLandOwner to delete row where id == user_id
   */
-  'removeUser': {
+  'removeUser/:user_id': {
     delete: function(req, res){
-      rb = req.body;
-      utils.removeLandOwner(rb.user_id)
-      .then(function(removed_entry){
-        res.status(200).send(removed_entry.toString());
+      utils.removeLandOwner(req.user_id)
+      .then(function(deleted){
+        if (deleted) res.status(200).send('Removed user '+req.user_id+' from land_owner table');
+        else res.status(400).send('No user with id# '+req.user_id+' to delete');
       })
       .catch(function(error){
         res.status(400).send(error);
@@ -111,13 +111,12 @@ module.exports = {
   * expects gid (INTEGER)
   * invokes removeParcelOwnership to delete row in owned_parcel matching given gid
   */
-  'removeAddress': {
+  'removeAddress/:gid': {
     delete: function(req, res){
-      rb = req.body;
-      utils.removeParcelOwnership(rb.gid)
+      utils.removeParcelOwnership(req.gid)
       .then(function(deleted){
-        if (deleted) res.status(200).send('Deleted owned_parcel row where gid='+rb.gid);
-        else res.status(400).send('Row with gid='+rb.gid+' does not exist in owned_parcel. Deleted nothing');
+        if (deleted) res.status(200).send('Deleted owned_parcel row where gid='+req.gid);
+        else res.status(400).send('Row with gid='+req.gid+' does not exist in owned_parcel. Deleted nothing');
       })
       .catch(function(error){
         res.status(400).send(error);
@@ -133,7 +132,6 @@ module.exports = {
 
   'setException': {
     get: function(req, res){
-
     }
   },
 
