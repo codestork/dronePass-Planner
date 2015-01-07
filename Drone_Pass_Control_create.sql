@@ -1,7 +1,7 @@
 -- Created by Vertabelo (http://vertabelo.com)
 -- Script type: create
 -- Scope: [tables, references, sequences, views, procedures]
--- Generated at Sun Jan 04 01:04:49 UTC 2015
+-- Generated at Wed Jan 07 00:02:35 UTC 2015
 
 
 
@@ -56,21 +56,25 @@ CREATE TABLE flight_path (
 -- Table: flight_path_area
 CREATE TABLE flight_path_area (
     gid serial  NOT NULL,
-    flight_path_gid int  NOT NULL,
+    flight_path_gid int UNIQUE NOT NULL,
     CONSTRAINT flight_path_area_pk PRIMARY KEY (gid)
 );
 
-
+CREATE UNIQUE INDEX ON flight_path_area (
+    flight_path_gid
+);
 
 -- Table: land_owner
 CREATE TABLE land_owner (
     id int  NOT NULL,
-    login varchar(255)  NOT NULL,
+    login varchar(255) UNIQUE NOT NULL,
     owner_authority int  NOT NULL DEFAULT 0,
     CONSTRAINT land_owner_pk PRIMARY KEY (id)
 );
 
-
+CREATE UNIQUE INDEX ON land_owner (
+    login
+);
 
 -- Table: landing_zone
 CREATE TABLE landing_zone (
@@ -85,14 +89,16 @@ CREATE TABLE landing_zone (
 CREATE TABLE owned_parcel (
     gid serial  NOT NULL,
     land_owner_id int  NOT NULL,
-    parcel_gid int  NOT NULL,
+    parcel_gid int UNIQUE NOT NULL,
     restriction_height int  NULL,
     restriction_start time  NULL CHECK(restriction_start < restriction_end),
     restriction_end time  NULL CHECK(restriction_start < restriction_end),
     CONSTRAINT owned_parcel_pk PRIMARY KEY (gid)
 );
 
-
+CREATE UNIQUE INDEX ON owned_parcel (
+    parcel_gid
+);
 
 -- Table: restriction_exemption
 CREATE TABLE restriction_exemption (
@@ -191,9 +197,10 @@ ALTER TABLE restriction_exemption ADD CONSTRAINT restriction_exemption_drone
     INITIALLY IMMEDIATE 
 ;
 
--- Reference:  restriction_exemption_edited_parcel (table: restriction_exemption)
+-- Reference:  restriction_exemption_owned_parcel (table: restriction_exemption)
 
-ALTER TABLE restriction_exemption ADD CONSTRAINT restriction_exemption_edited_parcel 
+
+ALTER TABLE restriction_exemption ADD CONSTRAINT restriction_exemption_owned_parcel 
     FOREIGN KEY (owned_parcel_gid)
     REFERENCES owned_parcel (gid)
     NOT DEFERRABLE 
