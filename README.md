@@ -19,16 +19,16 @@ $ createuser -P -s -e dronepass
 ```
 
 ### Creating your databases
-There will be two different databases to support development. One will be used for unit testing (`dronepasstest`) and the other will be used for your own dev testing (`dronepass`). If these databases already exist you'll need to either drop the databases or drop the tables (`DROP SCHEMA public cascade;CREATE SCHEMA public;CREATE EXTENSION postgis;`). After you've created a database and setup it's permissions you'll need to apply the PostGIS extension to each database. In order to run SQL commands against the dronepass database you can pull up the psql terminal using `$ psql -U dronepass -d dronepass` and you can exit the terminal with the `\q` command:
+There will be two different databases to support development. One will be used for unit testing (`dronepasstest`) and the other will be used for your own dev testing (`dronepass`). If these databases already exist you'll need to either drop the databases or drop the tables (`DROP SCHEMA public cascade;CREATE SCHEMA public;CREATE EXTENSION postgis;`). After you've created a database and setup it's permissions you'll need to apply the PostGIS extension to each database. In order to run SQL commands as the dronepass user you can pull up the psql terminal using `$ psql -U dronepass` and you can exit the terminal with the `\q` command:
 
-Connect to `dronepass` in psql and execute the following lines:
+In psql and execute the following lines:
 ``` SQL
 CREATE DATABASE dronepass;
 GRANT ALL PRIVILEGES ON DATABASE dronepass to dronepass;
 CREATE EXTENSION postgis;
 ```
 
-Connect to `dronepasstest` in psql and execute the following lines:
+To make the testing version in psql execute the following lines:
 ``` SQL
 CREATE DATABASE dronepassdbtest;
 GRANT ALL PRIVILEGES ON DATABASE dronepasstest to dronepass;
