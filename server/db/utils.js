@@ -279,63 +279,6 @@ var removeDroneOperator = function(id){
 }
 
 /**
-* input:  drone_id,  the id of the associated drone
-          drone_operator_id, the id of the associated operator
-          flight_start, the ISO string for the start date of the flight
-          flight_end, the ISO string for th end date for the flight
-          linestring_wgs84 the GeoJSON string for the proposed geometry.
-* output: knex query that returns all the parcel geometries that intersect
-*/
-var getPathParcelIntersect = function(drone_id, drone_operator_id, flight_start, flight_end, linestring_wgs84) {
-  var linestringValue = 'ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(' + linestring_wgs84 + '),4326),102243)';
-  var intersectLine = 'ST_Intersects(' + linestringValue + ',' + 'hull_geom' + ')';
-  var restrictionOverlap = "('" + flight_start + "'::time, '" + flight_end + "'::time) OVERLAPS (restriction_start::time, restriction_end::time)";
-  var rawQuery = intersectLine + ' AND ' + restrictionOverlap + ';';
-
-  // doesn't check exemption tables yet
-
-  console.log(rawQuery);
-  return pg.select('gid')
-    .from('owned_parcel')
-    .whereRaw(rawQuery);
-}
-
-/**
-* input:  drone_id,  the id of the associated drone
-          drone_operator_id, the id of the associated operator
-          flight_start, the ISO string for the start date of the flight
-          flight_end, the ISO string for th end date for the flight
-          linestring_wgs84 the GeoJSON string for the proposed geometry.
-* output: knex query that adds a flight path or returns the geometries that do not allow the flight path to be added
-*/
-var addFlightPath = function(drone_id, drone_operator_id, flight_start, flight_end, linestring_wgs84) {
-  getPathParcelIntersect(drone_id, drone_operator_id, flight_start, flight_end, linestring_wgs84).then(function(rows) {
-    if (rows.length === 0) {
-      // if there are no restrictions insert into flight path
-      console.log(rows);
-      var insertLine = 'INSERT INTO flight_path (drone_id, drone_operator_id, flight_start, flight_end, path_geom)';
-      var valuesLine = 'VALUES (' + drone_id + ',' + drone_operator_id + ",'" + flight_start + "','" + flight_end + "'," + linestringValue +')';
-      var rawInsert = insertLine + ' ' + valuesLine + ' ' + 'RETURNING gid;';
-
-      // and insert buffered flight path
-
-
-      return pg.raw(rawInsert);      
-    } else {
-      // if there is a restriction return geometries
-      console.log(rows);
-    }
-  });
-}
-
-
-// var getFlightPath = function(where_obj) {
-//   return pg.select('*')
-//   .from('flight_path')
-//   .where(where_obj);
-// }
-
-/**
 * input:  object of key value pairs that indicate equalities that must be met.
 * output: knex query that searches for geometries that meet 'where' requirements.
 *         To get the geometry you must access the __obj__.rows[#].st_asgeojson
