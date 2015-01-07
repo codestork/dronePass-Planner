@@ -35,19 +35,18 @@ GRANT ALL PRIVILEGES ON DATABASE dronepasstest to dronepass;
 CREATE EXTENSION postgis;
 ```
 
-## Inserting Data
+## Inserting Parcel Data
 
-### Inserting Data: The Easy Way
+### Inserting Parcel Data: The Easy Way
 If there is a Postgres dump file created for the planner database, then you're essentially ready to go. 
 
 ```bash
-$ psql --set ON_ERROR_STOP=on -d dronepass -f dump_v1.sql
-$ psql --set ON_ERROR_STOP=on -d dronepasstest -f dump_v1.sql
+$ psql --set ON_ERROR_STOP=on -d dronepass -f parcel_v1.sql
 ```
 
-You're done. Nothing left for you to do but kick back and enjoy not having to create the tables.
+You're done adding the unformatted parcel data. Skip down to the "Modifying Parcel Data and Creating other tables" section to edit parcel data and create the other tables.
 
-### Inserting Data: From Scratch (The Hard Way)
+### Inserting Parcel Data: From Scratch (The Hard Way)
 If there isn't a Postgres dump file you'll need to fill out your database in a series of steps, by collecting the county data and constructing the tables for the database. 
 
 ### Preparing the spatial reference information
@@ -65,9 +64,7 @@ Schema  | Name | Type  |    Owner
 ------------- | ------------- | ------------- | ------------- 
 public    | spatial_ref_sys | table  | dronepass
 
-
-
-### Copying alameda county data into databases
+### Copying Alameda County Data into Database
 As of the writing of this README(Dec 31, 2014) the data for alameda county is located at the county's [geospatial map files portal](https://www.acgov.org/government/geospatial.htm), the zip file is located at the following address: [https://www.acgov.org/maps/geospatial/geospatial.zip](https://www.acgov.org/maps/geospatial/geospatial.zip). The file is a 200Mb zip file that contains an ESRI shapefile representation of the parcel data. If you don't have a GUI client you will need to download the file via lynx (`$ brew install lynx`) in order to get this data into your database server. If using lynx to save the data to your current directory: 
 
 ```bash
@@ -93,6 +90,8 @@ Schema  | Name | Type  |    Owner
 public    | parcel              | table  | dronepass
 public    | parcel_wgs84        | table  | dronepass
 public    | spatial_ref_sys     | table  | dronepass
+
+## Modifying Parcel Data and Creating other tables
 
 ### Creating the rest of the tables for the database
 Now you’ll need to create the rest of the tables for the database by running the sql Drone_Pass_Control_create.sql script:
@@ -129,11 +128,11 @@ Afterwards your tables should look like the following:
 Now that you've got your database setup, you should create a backup of the initial state of the database using the Postgres `pg_dump` command:
 
 ```bash
-$ pg_dump dronepass > dump_v1.sql
+$ pg_dump dronepass > complete_v1.sql
 ```
 
 ### Create Testing Database
-Now that you've generated the dump file, make sure to update the `dronepasstest` database
+Now that you've generated the backup dump file, make sure to update the `dronepasstest` database
 ```bash
-$ psql --set ON_ERROR_STOP=on -d dronepasstest -f dump_v1.sql
+$ psql --set ON_ERROR_STOP=on -d dronepasstest -f complete_v1.sql
 ```

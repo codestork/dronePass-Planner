@@ -46,11 +46,11 @@ ALTER TABLE public.parcel_wgs84 DROP COLUMN shape_st_4;
 ALTER TABLE public.parcel_wgs84 
 ADD COLUMN height int NOT NULL DEFAULT 0;
 
-# create parcel index by geometry
+--create parcel index by geometry
 CREATE INDEX parcel_gidx ON public.parcel USING GIST ( lot_geom );
 VACUUM ANALYZE public.parcel;
-# THIS MIGHT BE OVERKILL
+--THIS MIGHT BE OVERKILL
 CLUSTER public.parcel USING parcel_gidx;
-# not sure if this ANALYZE CALL IS NECESSARY
+--not sure if this ANALYZE CALL IS NECESSARY
 ANALYZE public.parcel;
-#CLUSTER public.parcel_wgs84 USING 
+--CLUSTER public.parcel_wgs84 USING 

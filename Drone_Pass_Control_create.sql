@@ -1,7 +1,7 @@
 -- Created by Vertabelo (http://vertabelo.com)
 -- Script type: create
 -- Scope: [tables, references, sequences, views, procedures]
--- Generated at Sun Jan 04 01:04:49 UTC 2015
+-- Generated at Wed Jan 07 00:02:35 UTC 2015
 
 
 
@@ -34,7 +34,6 @@ CREATE TABLE drone_operator (
 CREATE TABLE drone_position (
     gid bigserial  NOT NULL,
     drone_id int  NOT NULL,
-    -- position_geom geometry(POINT)  NOT NULL,
     heading int  NULL CHECK (heading > -1 AND heading < 360),
     epoch timestamp  NOT NULL,
     CONSTRAINT drone_position_pk PRIMARY KEY (gid)
@@ -47,7 +46,6 @@ CREATE TABLE flight_path (
     gid serial  NOT NULL,
     drone_id int  NOT NULL,
     drone_operator_id int  NOT NULL,
-    -- path_geom geometry(LINESTRING)  NOT NULL,
     flight_start timestamp  NOT NULL DEFAULT '-infinity'::timestamp without time zone CHECK (flight_start < flight_end),
     flight_end timestamp  NOT NULL DEFAULT 'infinity'::timestamp without time zone CHECK (flight_start < flight_end),
     CONSTRAINT flight_path_pk PRIMARY KEY (gid)
@@ -55,31 +53,33 @@ CREATE TABLE flight_path (
 
 
 
--- Table: flight_path_buffered
-CREATE TABLE flight_path_buffered (
+-- Table: flight_path_area
+CREATE TABLE flight_path_area (
     gid serial  NOT NULL,
-    flight_path_gid int  NOT NULL,
-    -- buffered_geom geometry(POLYGON)  NOT NULL,
-    CONSTRAINT flight_path_buffered_pk PRIMARY KEY (gid)
+    flight_path_gid int UNIQUE NOT NULL,
+    CONSTRAINT flight_path_area_pk PRIMARY KEY (gid)
 );
 
-
+CREATE UNIQUE INDEX ON flight_path_area (
+    flight_path_gid
+);
 
 -- Table: land_owner
 CREATE TABLE land_owner (
     id int  NOT NULL,
-    login varchar(255)  NOT NULL,
+    login varchar(255) UNIQUE NOT NULL,
     owner_authority int  NOT NULL DEFAULT 0,
     CONSTRAINT land_owner_pk PRIMARY KEY (id)
 );
 
-
+CREATE UNIQUE INDEX ON land_owner (
+    login
+);
 
 -- Table: landing_zone
 CREATE TABLE landing_zone (
     gid serial  NOT NULL,
     owned_parcel_gid int  NOT NULL,
-    -- zone_geom geometry(POLYGON)  NOT NULL,
     CONSTRAINT landing_zone_pk PRIMARY KEY (gid)
 );
 
@@ -89,46 +89,25 @@ CREATE TABLE landing_zone (
 CREATE TABLE owned_parcel (
     gid serial  NOT NULL,
     land_owner_id int  NOT NULL,
-    parcel_gid int  NOT NULL,
-    -- hull_geom geometry(POLYGON)  NOT NULL,
+    parcel_gid int UNIQUE NOT NULL,
     restriction_height int  NULL,
-    restriction_start time  NULL,
-    restriction_end time  NULL,
+    restriction_start time  NULL CHECK(restriction_start < restriction_end),
+    restriction_end time  NULL CHECK(restriction_start < restriction_end),
     CONSTRAINT owned_parcel_pk PRIMARY KEY (gid)
 );
 
+CREATE UNIQUE INDEX ON owned_parcel (
+    parcel_gid
+);
 
-
--- Table: parcel
---CREATE TABLE parcel (
---    gid serial  NOT NULL,
---    lot_geom geometry(POLYGON)  NOT NULL,
---    height int  NULL,
---    APN varchar(64)  NOT NULL,
---    CONSTRAINT parcel_pk PRIMARY KEY (gid)
---);
-
-
-
--- Table: parcel_wgs84
---CREATE TABLE parcel_wgs84 (
---    gid serial  NOT NULL,
---    lot_geom geometry(POLYGON)  NOT NULL,
---    parcel_gid int  NOT NULL,
---    APN varchar(64)  NOT NULL,
---    CONSTRAINT parcel_wgs84_pk PRIMARY KEY (gid)
---);
-
-
-
--- Table: restriction_exception
-CREATE TABLE restriction_exception (
+-- Table: restriction_exemption
+CREATE TABLE restriction_exemption (
     id serial  NOT NULL,
     drone_id int  NOT NULL,
     owned_parcel_gid int  NOT NULL,
-    exception_start timestamp NULL,--  NOT NULL DEFAULT "-infinity" CHECK (exception_start < exception_end),
-    exception_end timestamp NULL,--NOT NULL DEFAULT "infinity" CHECK (exception_start < exception_end),
-    CONSTRAINT restriction_exception_pk PRIMARY KEY (id)
+    exemption_start timestamp  NOT NULL DEFAULT '-infinity'::timestamp without time zone CHECK (exemption_start < exemption_end),
+    exemption_end timestamp  NOT NULL DEFAULT 'infinity'::timestamp without time zone CHECK (exemption_start < exemption_end),    
+    CONSTRAINT restriction_exemption_pk PRIMARY KEY (id)
 );
 
 
@@ -168,10 +147,10 @@ ALTER TABLE owned_parcel ADD CONSTRAINT edited_parcel_parcel
     INITIALLY IMMEDIATE 
 ;
 
--- Reference:  flight_path_buffered_flight_path (table: flight_path_buffered)
+-- Reference:  flight_path_area_flight_path (table: flight_path_area)
 
 
-ALTER TABLE flight_path_buffered ADD CONSTRAINT flight_path_buffered_flight_path 
+ALTER TABLE flight_path_area ADD CONSTRAINT flight_path_area_flight_path 
     FOREIGN KEY (flight_path_gid)
     REFERENCES flight_path (gid)
     NOT DEFERRABLE 
@@ -208,29 +187,20 @@ ALTER TABLE landing_zone ADD CONSTRAINT landing_zone_owned_parcel
     INITIALLY IMMEDIATE 
 ;
 
--- Reference:  parcel_wgs84_parcel (table: parcel_wgs84)
+-- Reference:  restriction_exemption_drone (table: restriction_exemption)
 
 
---ALTER TABLE parcel_wgs84 ADD CONSTRAINT parcel_wgs84_parcel 
---    FOREIGN KEY (parcel_gid)
---    REFERENCES parcel (gid)
---    NOT DEFERRABLE 
---    INITIALLY IMMEDIATE 
---;
-
--- Reference:  restriction_exception_drone (table: restriction_exception)
-
-
-ALTER TABLE restriction_exception ADD CONSTRAINT restriction_exception_drone 
+ALTER TABLE restriction_exemption ADD CONSTRAINT restriction_exemption_drone 
     FOREIGN KEY (drone_id)
     REFERENCES drone (id)
     NOT DEFERRABLE 
     INITIALLY IMMEDIATE 
 ;
 
--- Reference:  restriction_exception_edited_parcel (table: restriction_exception)
+-- Reference:  restriction_exemption_owned_parcel (table: restriction_exemption)
 
-ALTER TABLE restriction_exception ADD CONSTRAINT restriction_exception_edited_parcel 
+
+ALTER TABLE restriction_exemption ADD CONSTRAINT restriction_exemption_owned_parcel 
     FOREIGN KEY (owned_parcel_gid)
     REFERENCES owned_parcel (gid)
     NOT DEFERRABLE 
@@ -253,7 +223,7 @@ SELECT AddGeometryColumn('drone_position', 'position_geom', 102243, 'POINT', 2, 
 SELECT AddGeometryColumn('flight_path', 'path_geom', 102243, 'LINESTRING', 2, false);
 
 -- flight path buffered will be created server side after the flight path has been accepted by the server side 
-SELECT AddGeometryColumn('flight_path_buffered', 'buffered_geom', 102243, 'POLYGON', 2, false);
+SELECT AddGeometryColumn('flight_path_area', 'buffered_geom', 102243, 'POLYGON', 2, false);
 
 -- End of file.
 
