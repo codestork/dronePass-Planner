@@ -110,6 +110,11 @@ public    | parcel              | table  | dronepass
 public    | parcel_wgs84        | table  | dronepass
 public    | spatial_ref_sys     | table  | dronepass
 
+Now create a pristine Postgres dump file for future use:
+```bash
+$ pg_dump dronepass > parcel_v1.sql
+```
+
 ## Modifying Parcel Data and Creating other tables
 
 ### Creating the rest of the tables for the database
