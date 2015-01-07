@@ -278,6 +278,27 @@ var removeDroneOperator = function(id){
   .delete();
 }
 
+/**
+* input:  drone_id,  the id of the associated drone
+          drone_operator_id, the id of the associated operator
+          flight_start, the ISO string for the start date of the flight
+          flight_end, the ISO string for th end date for the flight
+          linestring_wgs84 the GeoJSON string for the proposed geometry.
+* output: knex query that returns all the parcel geometries that intersect
+*/
+var getPathParcelIntersect = function(drone_id, drone_operator_id, flight_start, flight_end, linestring_wgs84) {
+  var linestringValue = 'ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(' + linestring_wgs84 + '),4326),102243)';
+  var intersectLine = 'ST_Intersects(' + linestringValue + ',' + 'hull_geom' + ')';
+  var restrictionOverlap = "('" + flight_start + "'::time, '" + flight_end + "'::time) OVERLAPS (restriction_start::time, restriction_end::time)";
+  var rawQuery = intersectLine + ' AND ' + restrictionOverlap + ';';
+
+  // doesn't check exemption tables yet
+
+  console.log(rawQuery);
+  return pg.select('gid')
+    .from('owned_parcel')
+    .whereRaw(rawQuery);
+}
 
 /**
 * input:  drone_id,  the id of the associated drone
@@ -285,66 +306,26 @@ var removeDroneOperator = function(id){
           flight_start, the ISO string for the start date of the flight
           flight_end, the ISO string for th end date for the flight
           linestring_wgs84 the GeoJSON string for the proposed geometry.
-* output: knex query that removes a row in the drone_operator table
+* output: knex query that adds a flight path or returns the geometries that do not allow the flight path to be added
 */
 var addFlightPath = function(drone_id, drone_operator_id, flight_start, flight_end, linestring_wgs84) {
-  // test a buffered version of the polygon against the currently restricted parcels
-  //SELECT ST_Intersects('POINT(0 0)'::geometry, 'LINESTRING ( 2 0, 0 2 )'::geometry)
-  //pg.select('gid')
-  //.from('parcel')
-  //.whereRaw("ST_Contains(lot_geom, ST_Transform(ST_GeometryFromText('POINT("+longitude+" "+latitude+")',4326), 102243))");
-  var linestringValue = 'ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(' + linestring_wgs84 + '),4326),102243)';
-  var intersectLine = 'ST_Intersects(' + linestringValue + ',' + 'hull_geom' + ')';
-  var restrictionOverlap = "('" + flight_start + "'::time, '" + flight_end + "'::time) OVERLAPS (restriction_start::time, restriction_end::time)";
-  var rawQuery = /*intersectLine + ' AND ' +*/ restrictionOverlap + ';';
-  console.log(rawQuery);
-  return pg.select('gid')
-    .from('owned_parcel')
-    .whereRaw(rawQuery);
-    // .then(function(rows) {
+  getPathParcelIntersect(drone_id, drone_operator_id, flight_start, flight_end, linestring_wgs84).then(function(rows) {
+    if (rows.length === 0) {
+      // if there are no restrictions insert into flight path
+      console.log(rows);
+      var insertLine = 'INSERT INTO flight_path (drone_id, drone_operator_id, flight_start, flight_end, path_geom)';
+      var valuesLine = 'VALUES (' + drone_id + ',' + drone_operator_id + ",'" + flight_start + "','" + flight_end + "'," + linestringValue +')';
+      var rawInsert = insertLine + ' ' + valuesLine + ' ' + 'RETURNING gid;';
 
-    // })
-  // select gid
-  // where 
-  // true (intersects)
-  // and
-  // true ((flight_start, flight_end) OVERLAPS (restriction_start, restriction_end))
-  // and 
-  // not true (gid===owned_parcel_id && drone_id===(flight_start, flight_end) OVERLAPS (restriction_start, restriction_end)
-
-// gid                | integer                | not null default nextval('owned_parcel_gid_seq'::regclass)
-//  land_owner_id      | integer                | not null
-//  parcel_gid         | integer                | not null
-//  restriction_height | integer                | 
-//  restriction_start  | time without time zone | 
-//  restriction_end    | time without time zone | 
-//  hull_geom          | geometry               | 
+      // and insert buffered flight path
 
 
-  pg.select('gid')
-    .from('owned_parcel')
-    .whereRaw(intersectLine)
-    .then(function(rows) {
-      if (rows.length > 0) {
-        for (var i = 0; i < rows.length; i++) {
-
-        }
-      }
-    })
-    //then(function(rows) {
-    // if their is a restriction maybe return the restricted geometries?
-    // if there is no restriction return the geometry
-
-      // insert a buffered version of the polygon
-
-      // insert the flight path
-  // var insertLine = 'INSERT INTO flight_path (drone_id, drone_operator_id, flight_start, flight_end, path_geom)';
-  // var linestringValue = 'ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(' + linestring_wgs84 + '),4326),102243)';
-  // var valuesLine = 'VALUES (' + drone_id + ',' + drone_operator_id + ',' + flight_start + ',' + flight_end + ',' + linestringValue +')';
-  // var rawQuery = insertLine + ' ' + valuesLine + ' ' + 'RETURNING gid;'      
-
-  // return pg.raw(rawQuery);      
-    //});  
+      return pg.raw(rawInsert);      
+    } else {
+      // if there is a restriction return geometries
+      console.log(rows);
+    }
+  });
 }
 
 
