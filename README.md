@@ -9,7 +9,18 @@ dronePass-Planner
   - __Development Team Members__: Dennis Lin, Arthur Chan
 
 ## Postgres Database Setup
-In order to run tests locally a developer will need a Postgres database setup with the PostGIS extension enabled. The following is the step by step process to get the database setup and running.
+In order to run tests locally a developer will need a Postgres database setup with the PostGIS extension enabled. The following is the step by step process to get the database setup and running. If you already have the `parcel_v1.sql`, the `Drone_Pass_Control_create.sql`, and the `Prepare_Parcel_Data.sql` files, then you can rock the following lines thoughtlessly to try and get your database up and running:
+
+``` bash
+$ createuser -P -s -e dronepass
+$ psql -U dronepass
+dronepass=# CREATE DATABASE dronepass;
+dronepass=# GRANT ALL PRIVILEGES ON DATABASE dronepass to dronepass;
+dronepass=# CREATE EXTENSION postgis;
+$ psql --set ON_ERROR_STOP=on -d dronepass -f parcel_v1.sql
+$ psql -d dronepass -a -f Drone_Pass_Control_create.sql
+$ psql -d dronepass -a -f Prepare_Parcel_Data.sql
+```
 
 ### Postgres
 Follow the instructions on the [Postgres installation page](http://postgis.net/install/) in order to get yourself the latest and greatest 9.4 version. Postgres 9.4 only plays nicely with PostGIS 2.1 and later versions. The following assumes that you've added the Postgres bin to your path. First you'll need to create a super user name `dronepass`:
