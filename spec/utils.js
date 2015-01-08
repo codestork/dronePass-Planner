@@ -37,39 +37,66 @@ var DRONE_OPERATOR_ID;
 var TIME_OUT = 250;
 var DRONE_OPERATOR_NAME = 'Bob';
 
+var registerAddress = function(land_owner_id, parcel_id, time_start, time_end) {
+  utils.getParcelGeometryText(parcel_id)
+  .then(function(result){
+    console.log(result);
+    return utils.convertToConvexHull(result[0].lot_geom);
+  })
+  // All the data is ready. Now inserts row to owned_parcel
+  .then(function(geom){
+    console.log(geom);
+    utils.addParcelOwnership(land_owner_id, parcel_id, geom, time_start, time_end).exec(function(err, rows) {
+
+    });
+  });
+}
+
 describe('utils()', function () {
 
   before(function(done) {
+    // requires a drone to be in database
+    var drone_id = 666;
+    // requires a drone_operator to be in database
+    var drone_operator_id = 666;
+    // requires 3 land owners to be in database
+    // landOwnerIds : 666, 667, 668
+    // parcel ids : 328449, 328451, 328452
+    // requires a restricted parcel 328449
+    // requires a restricted parcel with an exemption 328451
+    // requires a parcel that doesn't have restrictions 328452
+    
+    // registerAddress(666, 328449, '04:05:06', '10:05:06');
+    // registerAddress(667, 328451, null, null);
+    // registerAddress(668, 328452, '04:05:06', '10:05:06');
+
     // runs before all tests in this block
     //utils.removeLandOwner(15);
-    pg('drone').count('id').then(function(c) {
-      INITIAL_DRONE_COUNT = parseInt(c[0].count);
-    });
-    utils.addLandOwner(LAND_OWNER_ID_REMOVE, 'yo@yo.yo', 1).then(function(r) {
-    });
-    utils.addDroneOperator(DRONE_OPERATOR_NAME).then(function(r) {
-    });
+    // pg('drone').count('id').then(function(c) {
+    //   INITIAL_DRONE_COUNT = parseInt(c[0].count);
+    // });
+    // utils.addLandOwner(LAND_OWNER_ID_REMOVE, 'yo@yo.yo', 1).then(function(r) {
+    // });
+    // utils.addDroneOperator(DRONE_OPERATOR_NAME).then(function(r) {
+    // });
 
-    utils.addLandOwner(1, 'yo@yo.yo', 1).then(function(r) {
-    });
+    // utils.addLandOwner(1, 'yo@yo.yo', 1).then(function(r) {
+    // });
     var land_owner_id = 1,
         restriction_start = '10:00:00',
         restriction_end = '12:00:00';
     console.log(283712);
     // Get geometry of that parcel and compute convex hull of it
-    utils.getParcelGeometryText(283712)
-    .then(function(result){
-
-      console.log(result);
-      return utils.convertToConvexHull(result[0].lot_geom);
-    })
-    // All the data is ready. Now inserts row to owned_parcel
-    .then(function(hull_geom){
-      console.log(hull_geom);
-      utils.addParcelOwnership(land_owner_id, 283712, hull_geom, restriction_start, restriction_end).exec(function(err, rows) {
-        console.log(rows);
-      });
-    });
+    // utils.getParcelGeometryText(283712)
+    // .then(function(result){
+    //   return utils.convertToConvexHull(result[0].lot_geom);
+    // })
+    // // All the data is ready. Now inserts row to owned_parcel
+    // .then(function(hull_geom){
+    //   utils.addParcelOwnership(land_owner_id, 283712, hull_geom, restriction_start, restriction_end).exec(function(err, rows) {
+    //     console.log(rows);
+    //   });
+    // });
 
     setTimeout(function() {
       done();
@@ -111,19 +138,37 @@ describe('utils()', function () {
 
   it('should update row in owned_parcel', function(done){
     var start_time = '11:00:00', end_time= '15:00:00';
-    var result;
-    utils.addParcelOwnership(1,1,null,'05:00:00','10:00:00')
-    .then(function(entry){
-      utils.setRestriction(entry[0].parcel_gid, start_time, end_time)
+    var resultStart;
+    var resultEnd;
+    var oldStart;
+    var oldEnd;
+    // this relies on the existence of an owned_parcel with an association to parcel_gid 1
+    utils.getRestriction({gid:1}).exec(function(err, restriction_window) {
+      console.log(restriction_window);
+      if (err) {
+        expect(err).to.equal(undefined);
+        done();
+        return;
+      }
+      oldStart = restriction_window[0].restriction_start;
+      oldEnd = restriction_window[0].restriction_end;
+      utils.setRestriction(328452, start_time,end_time)
       .then(function(updated_entry){
-        result = updated_entry;
+        console.log(updated_entry);// [ { gid: 1,
+    // land_owner_id: 668,
+    // parcel_gid: 328452,
+    // restriction_start: '05:00:00',
+    // restriction_end: '10:00:00' } ]
+        resultStart = updated_entry[0].restriction_start;
+        resultEnd = updated_entry[0].restriction_end;
       });
     });
 
     setTimeout(function(){
-      utils.removeParcelOwnership(result[0].gid)
-      .then(function(){
-        done();
+      expect(start_time).to.equal(resultStart);
+      expect(end_time).to.equal(resultEnd);
+      done();
+      utils.setRestriction(1, oldStart, oldEnd).exec(function(err, r) {
       });
     }, TIME_OUT);
   });
@@ -239,14 +284,6 @@ describe('utils()', function () {
 
   it('exists removeDroneOperator', function () {
     expect(utils.removeDroneOperator).to.be.a('function');
-  });
-
-  it('exists addFlightPath', function () {
-    expect(utils.addFlightPath).to.be.a('function');
-  });
-
-  xit('exists getFlightPath', function () {
-    expect(utils.getFlightPath).to.be.a('function');
   });
 
   it('should get parcel by lon lat, getParcelGid', function(done) {
@@ -375,63 +412,4 @@ describe('utils()', function () {
       done();
     }, TIME_OUT);
   });
-
-  it('should add flight path', function(done) {
-    var result;
-    var linestring = { "type": "LineString", "coordinates": [[-122.0, 37.55], [-121.950, 37.56], [-121.950, 37.57], [-121.850, 37.58]]};
-
-    utils.addDrone(DRONE_TYPE, 4).returning('id').then(function(r) {
-      console.log(r);      
-      var drone_id = r[0];
-      utils.addDroneOperator(DRONE_OPERATOR_NAME).returning('id').then(function(r){
-        console.log(r);
-        var drone_operator_id = r[0];
-        utils.addFlightPath(drone_id, drone_operator_id, "1999-01-08 04:05:06", "1999-01-08 15:05:06", "'" + JSON.stringify(linestring) + "'").exec(function(err, r) {
-          console.log(r);
-          // utils.getFlighPathGeom({gid: r.rows[0].gid}).exec(function(err, rows) {
-          //   result = JSON.parse(rows.rows[0].st_asgeojson);
-          // });
-        });
-      });
-    });
-
-    setTimeout(function() {
-    //   // try deeply?
-    //   var resCoords = result.coordinates;
-    //   var origCoords = linestring.coordinates;
-    //   for (var i = 0; i < origCoords.length; i++) {
-    //     for (var j = 0; j < origCoords[i].length; j++) {
-    //       expect(resCoords[i][j]).to.be.closeTo(origCoords[i][j], 0.01);
-    //     }
-    //   }
-      done();
-    }, TIME_OUT);
-  });
-
-  xit('should fail to add a flight path with incorrect time order', function(done) {
-    var errResult;
-    var linestring = { "type": "LineString", "coordinates": [ [-122.0, 37.55], [-121.950, 37.56], [-121.950, 37.57], [-121.850, 37.58] ] };
-
-    utils.addDrone(DRONE_TYPE, 4).returning('id').then(function(r) {
-      var drone_id = r[0];
-      utils.addDroneOperator(DRONE_OPERATOR_NAME).returning('id').then(function(r){
-        var drone_operator_id = r[0];
-        utils.addFlightPath(drone_id, drone_operator_id, "'1999-01-08 05:05:06'","'1999-01-08 04:05:06'", "'" + JSON.stringify(linestring) + "'").exec(function(err, r) {
-          errResult = err.routine;
-        });
-      });
-    });
-
-    setTimeout(function() {
-      expect(errResult).to.equal('ExecConstraints');
-      done();
-    }, TIME_OUT);
-  });
-
-  // it('should remove flight path?', function(done) {
-  //   setTimeout(function() {
-  //     expect(false).to.equal(true);
-  //     done();
-  //   }, TIME_OUT);
-  // });          
 });
