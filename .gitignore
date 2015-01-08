@@ -11,3 +11,4 @@ testData/
 local_commands.sh
 dump_v1.sql
 *.orig
+.DS_Store
