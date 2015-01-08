@@ -127,7 +127,7 @@ var setRestriction = function(parcel_gid, start_time, end_time){
 
 
 var getRestriction = function(where_obj) {
-  return pg.select(['restriction_start', 'restriction_start'])
+  return pg.select(['restriction_start', 'restriction_end'])
   .from('owned_parcel')
   .where(where_obj);
 }
@@ -368,7 +368,6 @@ module.exports = {
   removeDrone:        removeDrone,
   addDroneOperator:   addDroneOperator,
   removeDroneOperator:removeDroneOperator,
-  addFlightPath:      addFlightPath,
   //getFlightPath:      getFlightPath,
   getFlighPathGeom:   getFlighPathGeom
 }
