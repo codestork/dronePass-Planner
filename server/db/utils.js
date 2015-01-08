@@ -22,9 +22,9 @@ var BUFFER_OFFSET = 5; // 5 METERS
 * output: knex query that selects GeoJSON Geometry of provided gid in provided table
 */
 var getParcelGeometryJSON = function(gid, table){
-  return pg.select(st.asGeoJSON('lot_geom'))
+  var query = pg.select(st.asGeoJSON('lot_geom'))
   .from(table || 'parcel')
-  .where('gid',gid);
+  return gid.constructor === Array ? query.whereIn('gid', gid) : query.where('gid', gid);
 }
 
 
@@ -34,9 +34,9 @@ var getParcelGeometryJSON = function(gid, table){
 * output: knex query that selects Text Geometry of provided gid in provided table
 */
 var getParcelGeometryText = function(gid, table){
-  return pg.select(st.asText('lot_geom'))
+  var query = pg.select(st.asText('lot_geom'))
   .from(table || 'parcel')
-  .where('gid',gid);
+  return gid.constructor === Array ? query.whereIn('gid', gid) : query.where('gid', gid);
 }
 
 
