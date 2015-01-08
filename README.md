@@ -24,8 +24,8 @@ dronepass=# CREATE EXTENSION postgis;
 Take in dump files
 ``` bash
 $ psql --set ON_ERROR_STOP=on -d dronepass -f parcel_v1.sql
-$ psql -d dronepass -a -f Drone_Pass_Control_create.sql
-$ psql -d dronepass -a -f Prepare_Parcel_Data.sql
+$ psql -d dronepass -U dronepass -h <host> -a -f Drone_Pass_Control_create.sql
+$ psql -d dronepass -U dronepass -h <host> -a -f Prepare_Parcel_Data.sql
 ```
 
 ### Postgres
