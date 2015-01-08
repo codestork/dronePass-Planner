@@ -1,7 +1,7 @@
 -- Created by Vertabelo (http://vertabelo.com)
 -- Script type: create
 -- Scope: [tables, references, sequences, views, procedures]
--- Generated at Wed Jan 07 00:02:35 UTC 2015
+-- Generated at Thu Jan 08 16:07:28 UTC 2015
 
 
 
@@ -9,16 +9,12 @@
 -- tables
 -- Table: drone
 CREATE TABLE drone (
-    id serial NOT NULL,
-    call_sign varchar(32) UNIQUE NOT NULL,
-    drone_type varchar(64) NOT NULL,
-    max_velocity int NOT NULL,
-    CONSTRAINT drone_pk PRIMARY KEY (id)
+    call_sign varchar(32)  NOT NULL,
+    drone_type varchar(64)  NOT NULL,
+    max_velocity int  NOT NULL,
+    CONSTRAINT drone_pk PRIMARY KEY (call_sign)
 );
 
-CREATE UNIQUE INDEX ON drone (
-    call_sign
-);
 
 
 -- Table: drone_operator
@@ -33,7 +29,7 @@ CREATE TABLE drone_operator (
 -- Table: drone_position
 CREATE TABLE drone_position (
     gid bigserial  NOT NULL,
-    drone_id int  NOT NULL,
+    drone_call_sign varchar(32)  NOT NULL,
     heading int  NULL CHECK (heading > -1 AND heading < 360),
     epoch timestamp  NOT NULL,
     CONSTRAINT drone_position_pk PRIMARY KEY (gid)
@@ -44,7 +40,7 @@ CREATE TABLE drone_position (
 -- Table: flight_path
 CREATE TABLE flight_path (
     gid serial  NOT NULL,
-    drone_id int  NOT NULL,
+    drone_call_sign varchar(32)  NOT NULL,
     drone_operator_id int  NOT NULL,
     flight_start timestamp  NOT NULL DEFAULT '-infinity'::timestamp without time zone CHECK (flight_start < flight_end),
     flight_end timestamp  NOT NULL DEFAULT 'infinity'::timestamp without time zone CHECK (flight_start < flight_end),
@@ -103,7 +99,7 @@ CREATE UNIQUE INDEX ON owned_parcel (
 -- Table: restriction_exemption
 CREATE TABLE restriction_exemption (
     id serial  NOT NULL,
-    drone_id int  NOT NULL,
+    drone_call_sign varchar(32)  NOT NULL,
     owned_parcel_gid int  NOT NULL,
     exemption_start timestamp  NOT NULL DEFAULT '-infinity'::timestamp without time zone CHECK (exemption_start < exemption_end),
     exemption_end timestamp  NOT NULL DEFAULT 'infinity'::timestamp without time zone CHECK (exemption_start < exemption_end),    
@@ -117,12 +113,12 @@ CREATE TABLE restriction_exemption (
 
 
 -- foreign keys
--- Reference:  drone_movement_drone (table: drone_position)
+-- Reference:  drone_position_drone (table: drone_position)
 
 
-ALTER TABLE drone_position ADD CONSTRAINT drone_movement_drone 
-    FOREIGN KEY (drone_id)
-    REFERENCES drone (id)
+ALTER TABLE drone_position ADD CONSTRAINT drone_position_drone 
+    FOREIGN KEY (drone_call_sign)
+    REFERENCES drone (call_sign)
     NOT DEFERRABLE 
     INITIALLY IMMEDIATE 
 ;
@@ -161,8 +157,8 @@ ALTER TABLE flight_path_area ADD CONSTRAINT flight_path_area_flight_path
 
 
 ALTER TABLE flight_path ADD CONSTRAINT flight_path_drone 
-    FOREIGN KEY (drone_id)
-    REFERENCES drone (id)
+    FOREIGN KEY (drone_call_sign)
+    REFERENCES drone (call_sign)
     NOT DEFERRABLE 
     INITIALLY IMMEDIATE 
 ;
@@ -191,8 +187,8 @@ ALTER TABLE landing_zone ADD CONSTRAINT landing_zone_owned_parcel
 
 
 ALTER TABLE restriction_exemption ADD CONSTRAINT restriction_exemption_drone 
-    FOREIGN KEY (drone_id)
-    REFERENCES drone (id)
+    FOREIGN KEY (drone_call_sign)
+    REFERENCES drone (call_sign)
     NOT DEFERRABLE 
     INITIALLY IMMEDIATE 
 ;
