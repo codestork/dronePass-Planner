@@ -11,12 +11,18 @@ dronePass-Planner
 ## Postgres Database Setup
 In order to run tests locally a developer will need a Postgres database setup with the PostGIS extension enabled. The following is the step by step process to get the database setup and running. If you already have the `parcel_v1.sql`, the `Drone_Pass_Control_create.sql`, and the `Prepare_Parcel_Data.sql` files, then you can rock the following lines thoughtlessly to try and get your database up and running:
 
+### Super-Fast-No-Reading Postgres Setup (if you're having trouble make sure Postgres is installed and that it is in your $PATH):
+
+Create Database
 ``` bash
 $ createuser -P -s -e dronepass
-$ psql -U dronepass
-dronepass=# CREATE DATABASE dronepass;
-dronepass=# GRANT ALL PRIVILEGES ON DATABASE dronepass to dronepass;
+$ psql -c 'CREATE DATABASE dronepass;'
+$ psql -c 'GRANT ALL PRIVILEGES ON DATABASE dronepass to dronepass;'
+$ psql -U dronepass -d dronepass
 dronepass=# CREATE EXTENSION postgis;
+```
+Take in dump files
+``` bash
 $ psql --set ON_ERROR_STOP=on -d dronepass -f parcel_v1.sql
 $ psql -d dronepass -a -f Drone_Pass_Control_create.sql
 $ psql -d dronepass -a -f Prepare_Parcel_Data.sql
@@ -30,20 +36,22 @@ $ createuser -P -s -e dronepass
 ```
 
 ### Creating your databases
-There will be two different databases to support development. One will be used for unit testing (`dronepasstest`) and the other will be used for your own dev testing (`dronepass`). If these databases already exist you'll need to either drop the databases or drop the tables (`DROP SCHEMA public cascade;CREATE SCHEMA public;CREATE EXTENSION postgis;`). After you've created a database and setup it's permissions you'll need to apply the PostGIS extension to each database. In order to run SQL commands as the dronepass user you can pull up the psql terminal using `$ psql -U dronepass` and you can exit the terminal with the `\q` command:
+There will be two different databases to support development. One will be used for unit testing (`dronepasstest`) and the other will be used for your own dev testing (`dronepass`). If these databases already exist you'll need to either drop the databases or drop the tables (`DROP SCHEMA public cascade;CREATE SCHEMA public;CREATE EXTENSION postgis;`). After you've created a database and setup it's permissions you'll need to apply the PostGIS extension to each database. In order to run SQL commands as the dronepass user you can use the psql preceding lines of SQL. In order to enable PostGIS you must connect to the psql terminal. You can exit the terminal with the `\q` command:
 
-In psql and execute the following lines:
-``` SQL
-CREATE DATABASE dronepass;
-GRANT ALL PRIVILEGES ON DATABASE dronepass to dronepass;
-CREATE EXTENSION postgis;
+In terminal and psql execute the following lines:
+``` bash
+$ psql -c 'CREATE DATABASE dronepass;'
+$ psql -c 'GRANT ALL PRIVILEGES ON DATABASE dronepass to dronepass;'
+$ psql -U dronepass -d dronepass
+dronepass=# CREATE EXTENSION postgis;
 ```
 
 To make the testing version in psql execute the following lines:
-``` SQL
-CREATE DATABASE dronepassdbtest;
-GRANT ALL PRIVILEGES ON DATABASE dronepasstest to dronepass;
-CREATE EXTENSION postgis;
+``` bash
+$ psql -c 'CREATE DATABASE dronepassdbtest;'
+$ psql -c 'GRANT ALL PRIVILEGES ON DATABASE dronepass to dronepass;'
+$ psql -U dronepass -d dronepassdbtest
+dronepass=# CREATE EXTENSION postgis;
 ```
 
 ## Inserting Parcel Data
@@ -101,6 +109,11 @@ Schema  | Name | Type  |    Owner
 public    | parcel              | table  | dronepass
 public    | parcel_wgs84        | table  | dronepass
 public    | spatial_ref_sys     | table  | dronepass
+
+Now create a pristine Postgres dump file for future use:
+```bash
+$ pg_dump dronepass > parcel_v1.sql
+```
 
 ## Modifying Parcel Data and Creating other tables
 
