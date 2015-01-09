@@ -56,19 +56,21 @@ describe('utils()', function () {
 
   before(function(done) {
     // requires a drone to be in database
-    var drone_id = 666;
+    var callSign = 'Test';//INSERT INTO drone (call_sign, drone_type, max_velocity) VALUES ('Test', 'Amazon', 10);
     // requires a drone_operator to be in database
-    var drone_operator_id = 666;
+    var drone_operator_id = 0;//INSERT INTO drone_operator (id, operator_name) VALUES (12345, 'Test');
     // requires 3 land owners to be in database
-    // landOwnerIds : 666, 667, 668
+    // landOwnerIds : 12345, 23456, 34567
+    // INSERT INTO land_owner (id, login) VALUES (12345, 'yo@yo.yo');
+    // INSERT INTO land_owner (id, login) VALUES (23456, 'bo@bo.bo');
+    // INSERT INTO land_owner (id, login) VALUES (34567, 'mo@mo.mo');
     // parcel ids : 328449, 328451, 328452
     // requires a restricted parcel 328449
     // requires a restricted parcel with an exemption 328451
     // requires a parcel that doesn't have restrictions 328452
-    
-    // registerAddress(666, 328449, '04:05:06', '10:05:06');
-    // registerAddress(667, 328451, null, null);
-    // registerAddress(668, 328452, '04:05:06', '10:05:06');
+    registerAddress(12345, 328449, '04:05:06', '10:05:06');
+    registerAddress(23456, 328451, null, null);
+    registerAddress(34567, 328452, '04:05:06', '10:05:06');
 
     // runs before all tests in this block
     //utils.removeLandOwner(15);

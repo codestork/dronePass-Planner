@@ -41,7 +41,7 @@ CREATE TABLE drone_position (
 CREATE TABLE flight_path (
     gid serial  NOT NULL,
     drone_call_sign varchar(32)  NOT NULL,
-    drone_operator_id int  NOT NULL,
+    drone_operator_id int NOT NULL DEFAULT 0, --drone_operator_id int  NOT NULL,
     flight_start timestamp  NOT NULL DEFAULT '-infinity'::timestamp without time zone CHECK (flight_start < flight_end),
     flight_end timestamp  NOT NULL DEFAULT 'infinity'::timestamp without time zone CHECK (flight_start < flight_end),
     CONSTRAINT flight_path_pk PRIMARY KEY (gid)
@@ -166,12 +166,12 @@ ALTER TABLE flight_path ADD CONSTRAINT flight_path_drone
 -- Reference:  flight_path_drone_operator (table: flight_path)
 
 
-ALTER TABLE flight_path ADD CONSTRAINT flight_path_drone_operator 
-    FOREIGN KEY (drone_operator_id)
-    REFERENCES drone_operator (id)
-    NOT DEFERRABLE 
-    INITIALLY IMMEDIATE 
-;
+-- ALTER TABLE flight_path ADD CONSTRAINT flight_path_drone_operator 
+--     FOREIGN KEY (drone_operator_id)
+--     REFERENCES drone_operator (id)
+--     NOT DEFERRABLE 
+--     INITIALLY IMMEDIATE 
+-- ;
 
 -- Reference:  landing_zone_owned_parcel (table: landing_zone)
 
