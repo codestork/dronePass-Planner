@@ -183,10 +183,10 @@ var removeParcelOwnership = function(gid){
 *         exemption_end      (TIMESTAMP)
 * output: knex query adds row in restriction_exemption table
 */
-var addRestrictionExemption = function(drone_id, owned_parcel_gid, exemption_start, exemption_end){
+var addRestrictionExemption = function(call_sign, owned_parcel_gid, exemption_start, exemption_end){
   return pg('restriction_exemption')
   .insert({
-    drone_id: drone_id,
+    call_sign: call_sign,
     owned_parcel_gid: owned_parcel_gid,
     exemption_start: exemption_start,
     exemption_end: exemption_end
