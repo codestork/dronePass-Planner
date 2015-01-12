@@ -53,6 +53,18 @@ var convertToConvexHull = function(geoText){
 
 
 /**
+* input: Geometry as Text
+* output: promise with geometry set to specified srid
+*/
+var setSRID = function(geometry, srid){
+  return pg.raw("SELECT ST_SetSRID(ST_GeomFromText('"+geometry+"'),"+srid+")")
+  .then(function(result){
+    return result.rows[0].st_setsrid;
+  });
+}
+
+
+/**
 * input: long, lat
 * output: knex query that selects gid of Parcel that intersects with provided long lat point
 *         by geography calculations (slow, exact)
@@ -97,8 +109,22 @@ var getParcelGid = function(longitude, latitude){
 // })
 // .then(console.log);
 
+/**
+* input:  polygon (as Text or Geometry)
+*         buffer length (FLOAT)
+* output: promise with a buffered polygon (as Text)
+*/
+var bufferPolygon = function(polygon, bufferSize){
+  return pg.raw("SELECT ST_AsText(ST_Buffer('"+polygon+"',"+bufferSize+", 'join=mitre mitre_limit=5.0'))")
+  .then(function(result){
+    return result.rows[0].st_astext;
+  });
+}
 
-
+// var prebufferedPolygon = "POLYGON((50 100, 50 200, 100 200, 100 199, 102 200, 250 200, 250 100, 50 100))";
+// console.log(prebufferedPolygon);
+// bufferPolygon(prebufferedPolygon, 5)
+// .then(console.log)
 
 
 
@@ -354,6 +380,8 @@ module.exports = {
   getParcelGidByGeography:    getParcelGidByGeography, 
   convertToConvexHull:        convertToConvexHull,
   getParcelGid:               getParcelGid,
+  setSRID:                    setSRID,
+  bufferPolygon:              bufferPolygon,
   // Client
   getRestriction:             getRestriction, 
   setRestriction:             setRestriction,
