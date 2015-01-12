@@ -83,7 +83,13 @@ module.exports = {
       // Get geometry of that parcel and compute convex hull of it
       .then(utils.getParcelGeometryText)
       .then(function(result){
-        return utils.convertToConvexHull(result[0].lot_geom);
+        return utils.convertToConvexHull(result[0].lot_geom)
+        .then(function(geom){
+          return utils.bufferPolygon(geom, 5);
+        })
+        .then(function(geom){
+          return utils.setSRID(geom, 102243);
+        })
       })
       // All the data is ready. Now inserts row to owned_parcel
       .then(function(geom){
