@@ -68,9 +68,9 @@ describe('utils()', function () {
     // requires a restricted parcel 328449
     // requires a restricted parcel with an exemption 328451
     // requires a parcel that doesn't have restrictions 328452
-    registerAddress(12345, 328449, '04:05:06', '10:05:06');
-    registerAddress(23456, 328451, null, null);
-    registerAddress(34567, 328452, '04:05:06', '10:05:06');
+    registerAddress(12345, 70371, '04:05:06', '10:05:06');
+    registerAddress(23456, 70199, null, null);
+    registerAddress(34567, 70640, '04:05:06', '10:05:06');
 
     // runs before all tests in this block
     //utils.removeLandOwner(15);
@@ -263,6 +263,8 @@ describe('utils()', function () {
   });
 
   xit('should insert row into restriction_exemption and delete row', function(done) {
+    
+
     
     setTimeout(function(){
       done();
