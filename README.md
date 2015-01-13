@@ -24,8 +24,20 @@ dronepass=# CREATE EXTENSION postgis;
 Take in dump files
 ``` bash
 $ psql --set ON_ERROR_STOP=on -d dronepass -f parcel_v1.sql
-$ psql -d dronepass -U dronepass -h <host> -a -f Drone_Pass_Control_create.sql
 $ psql -d dronepass -U dronepass -h <host> -a -f Prepare_Parcel_Data.sql
+$ psql -d dronepass -U dronepass -h <host> -a -f Drone_Pass_Control_create.sql
+```
+
+If you're running unit tests you'll need to make a ```dronepasstest``` database:
+```bash
+$ psql -c 'CREATE DATABASE dronepasstest;'
+$ psql -c 'GRANT ALL PRIVILEGES ON DATABASE dronepasstest to dronepass;'
+$ psql -U dronepass -d dronepasstest
+dronepasstest=# CREATE EXTENSION postgis;
+dronepasstest=# \q
+$ psql --set ON_ERROR_STOP=on -d dronepasstest -f parcel_v1.sql
+$ psql -d dronepasstest -U dronepass -h <host> -a -f Prepare_Parcel_Data.sql
+$ psql -d dronepasstest -U dronepass -h <host> -a -f Drone_Pass_Control_create.sql
 ```
 
 ### Postgres
@@ -35,7 +47,7 @@ Follow the instructions on the [Postgres installation page](http://postgis.net/i
 $ createuser -P -s -e dronepass
 ```
 
-### Creating your databases
+### Creating your databases from scratch
 There will be two different databases to support development. One will be used for unit testing (`dronepasstest`) and the other will be used for your own dev testing (`dronepass`). If these databases already exist you'll need to either drop the databases or drop the tables (`DROP SCHEMA public cascade;CREATE SCHEMA public;CREATE EXTENSION postgis;`). After you've created a database and setup it's permissions you'll need to apply the PostGIS extension to each database. In order to run SQL commands as the dronepass user you can use the psql preceding lines of SQL. In order to enable PostGIS you must connect to the psql terminal. You can exit the terminal with the `\q` command:
 
 In terminal and psql execute the following lines:
@@ -46,18 +58,18 @@ $ psql -U dronepass -d dronepass
 dronepass=# CREATE EXTENSION postgis;
 ```
 
-To make the testing version in psql execute the following lines:
+To make the unit testing version in psql execute the following lines:
 ``` bash
-$ psql -c 'CREATE DATABASE dronepassdbtest;'
-$ psql -c 'GRANT ALL PRIVILEGES ON DATABASE dronepass to dronepass;'
-$ psql -U dronepass -d dronepassdbtest
-dronepass=# CREATE EXTENSION postgis;
+$ psql -c 'CREATE DATABASE dronepasstest;'
+$ psql -c 'GRANT ALL PRIVILEGES ON DATABASE dronepasstest to dronepass;'
+$ psql -U dronepass -d dronepasstest
+dronepasstest=# CREATE EXTENSION postgis;
 ```
 
 ## Inserting Parcel Data
 
 ### Inserting Parcel Data: The Easy Way
-If there is a Postgres dump file created for the planner database, then you're essentially ready to go. 
+If there is a Postgres dump file created for the planner database, then you're essentially ready to go. Execute the following dump_file import (for the unit-testing database you'll import from the ```complete_v1.sql``` at the bottom of this readme): 
 
 ```bash
 $ psql --set ON_ERROR_STOP=on -d dronepass -f parcel_v1.sql
@@ -71,7 +83,7 @@ If there isn't a Postgres dump file you'll need to fill out your database in a s
 ### Preparing the spatial reference information
 In testing dronePass-Planner we've committed to using Alameda County parcel data, and in order to project that data into a spatial reference that uses meters we must add two spatial references to our dronepass and our dronepasstestdb databases. That requires inserting spatial references into the `spatial_ref_sys` table. Alameda county uses the California State Plane III projection in feet ([http://epsg.io/102643](http://epsg.io/102643)) and we'll be projecting that to meters ([http://epsg.io/102243](http://epsg.io/102243)). The following are the insertion commands (each of these insertions are brutally long and can be inspected on their respective epsg.io pages):
 
-Execute the following lines in the psql terminal:
+Execute the following lines in the psql terminal after connecting to the ```dronepass``` database:
 ``` SQL
 INSERT into spatial_ref_sys (srid, auth_name, auth_srid, proj4text, srtext) values ( 102643, 'ESRI', 102643, '+proj=lcc +lat_1=37.06666666666667 +lat_2=38.43333333333333 +lat_0=36.5 +lon_0=-120.5 +x_0=2000000 +y_0=500000.0000000002 +datum=NAD83 +units=us-ft +no_defs ', 'PROJCS["NAD_1983_StatePlane_California_III_FIPS_0403_Feet",GEOGCS["GCS_North_American_1983",DATUM["North_American_Datum_1983",SPHEROID["GRS_1980",6378137,298.257222101]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["False_Easting",6561666.666666666],PARAMETER["False_Northing",1640416.666666667],PARAMETER["Central_Meridian",-120.5],PARAMETER["Standard_Parallel_1",37.06666666666667],PARAMETER["Standard_Parallel_2",38.43333333333333],PARAMETER["Latitude_Of_Origin",36.5],UNIT["Foot_US",0.30480060960121924],AUTHORITY["EPSG","102643"]]');
 INSERT into spatial_ref_sys (srid, auth_name, auth_srid, proj4text, srtext) values ( 102243, 'ESRI', 102243, '+proj=lcc +lat_1=37.06666666666667 +lat_2=38.43333333333333 +lat_0=36.5 +lon_0=-120.5 +x_0=2000000 +y_0=500000 +ellps=GRS80 +units=m +no_defs ', 'PROJCS["NAD_1983_HARN_StatePlane_California_III_FIPS_0403",GEOGCS["GCS_North_American_1983_HARN",DATUM["NAD83_High_Accuracy_Regional_Network",SPHEROID["GRS_1980",6378137,298.257222101]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["False_Easting",2000000],PARAMETER["False_Northing",500000],PARAMETER["Central_Meridian",-120.5],PARAMETER["Standard_Parallel_1",37.06666666666667],PARAMETER["Standard_Parallel_2",38.43333333333333],PARAMETER["Latitude_Of_Origin",36.5],UNIT["Meter",1],AUTHORITY["EPSG","102243"]]');
