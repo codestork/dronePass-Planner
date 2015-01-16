@@ -2,6 +2,8 @@ dronePass-Planner
 =================
 > Planner is the central server of the dronePass project. The server will manage permissions suggested by property owners and authorities. Drones in flight will maintain communication with Planner and adjust their flight paths as permission levels change.
 
+![Alt text](/../screen/screenshots/administrator.png "Location in System Architecture")
+
 ## Team
 
   - __Product Owner__: David Raleigh
