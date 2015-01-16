@@ -70,7 +70,6 @@ var setSRID = function(geometry, srid){
 *         by geography calculations (slow, exact)
 */
 var getParcelGidByGeography = function(longitude, latitude){
-  var longitude=-122.023036, latitude=37.634351;
   return pg.select('gid')
   .from('parcel_wgs84')
   .whereRaw("ST_Intersects(ST_GeographyFromText('SRID=4326;POINT("+longitude+" "+latitude+")'), lot_geom)");
@@ -264,8 +263,10 @@ var addDrone = function(callSign, droneType, maxVelocity) {
     call_sign: callSign,
     drone_type: droneType,
     max_velocity: maxVelocity
-  }, ['id', 'call_sign', 'drone_type', 'max_velocity']);
+  }, ['call_sign', 'drone_type', 'max_velocity']);
 }
+// addDrone('Tango-Alfa-Victor-2-4-7', 1, 10).then(console.log).catch(console.log);
+
 
 /**
 * input:  call sign
