@@ -13,6 +13,7 @@ var BUFFER_OFFSET = 5; // 5 METERS
 * getParcelGid(x,y,table).exec(callback);
 */
 
+
 //*************************************************************************
 //        GENERAL QUERIES
 //*************************************************************************
@@ -25,9 +26,7 @@ var getParcelGeometryJSON = function(gid, table){
   var query = pg.select(st.asGeoJSON('lot_geom'))
   .from(table || 'parcel')
   return gid.constructor === Array ? query.whereIn('gid', gid) : query.where('gid', gid);
-}
-
-
+};
 
 /**
 * input: gid, table
@@ -37,8 +36,7 @@ var getParcelGeometryText = function(gid, table){
   var query = pg.select(st.asText('lot_geom'))
   .from(table || 'parcel')
   return gid.constructor === Array ? query.whereIn('gid', gid) : query.where('gid', gid);
-}
-
+};
 
 /**
 * input: Geometry as Text
@@ -49,8 +47,7 @@ var convertToConvexHull = function(geoText){
   .then(function(r){
     return r.rows[0].st_setsrid;
   });
-}
-
+};
 
 /**
 * input: Geometry as Text
@@ -61,8 +58,7 @@ var setSRID = function(geometry, srid){
   .then(function(result){
     return result.rows[0].st_setsrid;
   });
-}
-
+};
 
 /**
 * input: long, lat
@@ -74,14 +70,7 @@ var getParcelGidByGeography = function(longitude, latitude){
   return pg.select('gid')
   .from('parcel_wgs84')
   .whereRaw("ST_Intersects(ST_GeographyFromText('SRID=4326;POINT("+longitude+" "+latitude+")'), lot_geom)");
-}
-// var d1 = new Date;
-// getParcelGidByGeography(-122.023036, 37.634351).then(function(r){
-//   d1d = new Date;
-//   console.log(r);
-//   console.log('geog',(d1d-d1)+'ms');
-// });
-
+};
 
 /**
 * input: long, lat
@@ -92,25 +81,10 @@ var getParcelGid = function(longitude, latitude){
   return pg.select('gid')
   .from('parcel')
   .whereRaw("ST_Contains(lot_geom, ST_Transform(ST_GeometryFromText('POINT("+longitude+" "+latitude+")',4326), 102243))");
-}
-// var d2 = new Date;
-// getParcelGid(-122.023036, 37.634351)
-// .then(function(r){
-//   d2d = new Date;
-//   console.log(r);
-//   console.log('geom',(d2d-d2)+'ms');
-//   return r;
-// })
-// .then(function(r){
-//   return getParcelGeometry(r[0].gid)
-//   .then(function(geom){
-//     return {gid:r[0].gid, geom: geom[0].lot_geom}
-//   });
-// })
-// .then(console.log);
+};
 
 /**
-* input:  polygon (as Text or Geometry)
+* input:  polygon       (as Text or Geometry)
 *         buffer length (FLOAT)
 * output: promise with a buffered polygon (as Text)
 */
@@ -119,17 +93,7 @@ var bufferPolygon = function(polygon, bufferSize){
   .then(function(result){
     return result.rows[0].st_astext;
   });
-}
-
-// var prebufferedPolygon = "POLYGON((50 100, 50 200, 100 200, 100 199, 102 200, 250 200, 250 100, 50 100))";
-// console.log(prebufferedPolygon);
-// bufferPolygon(prebufferedPolygon, 5)
-// .then(console.log)
-
-
-
-
-
+};
 
 
 //*************************************************************************
@@ -148,15 +112,14 @@ var setRestriction = function(parcel_gid, start_time, end_time){
   .update({
     restriction_start: start_time,
     restriction_end: end_time
-  }, ['gid','land_owner_id','parcel_gid','restriction_start','restriction_end'])
-}
-
+  }, ['gid','land_owner_id','parcel_gid','restriction_start','restriction_end']);
+};
 
 var getRestriction = function(where_obj) {
   return pg.select(['restriction_start', 'restriction_end'])
   .from('owned_parcel')
   .where(where_obj);
-}
+};
 
 /**
 * input:  id              (INTEGER)
@@ -171,7 +134,7 @@ var addLandOwner = function(id, login, owner_authority) {
     login: login,
     owner_authority: owner_authority
   });
-}
+};
 
 /**
 * input:  id  (INTEGER)
@@ -181,8 +144,7 @@ var removeLandOwner = function(id){
   return pg('land_owner')
   .where('id',id)
   .delete();
-}
-
+};
 
 /**
 * input:  land_owner_id (INTEGER)
@@ -202,7 +164,7 @@ var addParcelOwnership = function(land_owner_id, parcel_gid, geom, start, end){
     restriction_start: start,
     restriction_end: end
   }, ['gid', 'land_owner_id', 'parcel_gid', 'restriction_height', 'restriction_start', 'restriction_end']);
-}
+};
 
 /**
 * input:  gid (INTEGER)
@@ -212,8 +174,7 @@ var removeParcelOwnership = function(gid){
   return pg('owned_parcel')
   .where('gid', gid)
   .delete();
-}
-
+};
 
 /**
 * input:  drone_id           (INTEGER)
@@ -229,9 +190,8 @@ var addRestrictionExemption = function(drone_id, owned_parcel_gid, exemption_sta
     owned_parcel_gid: owned_parcel_gid,
     exemption_start: exemption_start,
     exemption_end: exemption_end
-  }, ['id', 'drone_id', 'owned_parcel_gid', 'exemption_start', 'exemption_end'])
-}
-
+  }, ['id', 'drone_id', 'owned_parcel_gid', 'exemption_start', 'exemption_end']);
+};
 
 /**
 * input: id (INTEGER)
@@ -241,11 +201,7 @@ var removeRestrictionExemption = function(id){
   return pg('restriction_exemption')
   .where('id', id)
   .delete();
-}
-
-
-
-
+};
 
 
 //*************************************************************************
@@ -265,7 +221,7 @@ var addDrone = function(callSign, droneType, maxVelocity) {
     drone_type: droneType,
     max_velocity: maxVelocity
   }, ['id', 'call_sign', 'drone_type', 'max_velocity']);
-}
+};
 
 /**
 * input:  call sign
@@ -275,13 +231,7 @@ var removeDrone = function(callSign) {
   return pg('drone')
   .where('call_sign',callSign)
   .delete();
-}
-
-// var getDrone = function(where_obj) {
-//   return pg.select('*')
-//   .from('drone')
-//   .where(where_obj);
-// }
+};
 
 /**
 * input:  operator_name   (VARCHAR)
@@ -292,7 +242,7 @@ var addDroneOperator = function(operator_name) {
   .insert({
     operator_name: operator_name
   });
-}
+};
 
 /**
 * input:  id
@@ -302,7 +252,7 @@ var removeDroneOperator = function(id){
   return pg('drone_operator')
   .where('id',id)
   .delete();
-}
+};
 
 /**
 * input:  object of key value pairs that indicate equalities that must be met.
@@ -333,21 +283,7 @@ var getFlighPathGeom = function(where_obj) {
   var whereLine = _whereCreation(where_obj);
   var rawQuery = selectLine + ' ' + fromLine + ' ' + whereLine + ';';
   return pg.raw(rawQuery);
-}
-
-// var getDroneFlightPath = function(where_obj) {
-// }
-
-// var getOperatorFlightPath = function(where_obj) {
-// }
-
-// var getFlightPathArea = function(where_obj) {
-//}
-
-
-
-
-
+};
 
 
 //*************************************************************************
@@ -368,9 +304,8 @@ var _whereCreation = function(where_obj) {
     whereLine += '=';
     whereLine += where_obj[key];
   }
-
   return whereLine;
-}
+};
 
 
 module.exports = {
