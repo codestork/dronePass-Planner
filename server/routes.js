@@ -1,16 +1,6 @@
 var utils = require('./db/utils');
 
 module.exports = {
-  'test1': {
-    get: function(req, res){
-      console.log('GETTING THE STUFF')
-      res.status(200).send('hello world');
-    },
-    post: function(req, res){
-      res.status(200).send('whut');
-    }
-  },
-
 
   /**
   * expects post method
@@ -26,11 +16,11 @@ module.exports = {
         res.status(200).send(result);
       })
       .catch(function(error){
+        console.error("registerUser error:",error);
         res.status(400).send(error);
       });
     }
   },
-
 
   /**
   * expects delete method
@@ -46,11 +36,11 @@ module.exports = {
         else res.status(400).send('No user with id# '+req.generic_id+' to delete');
       })
       .catch(function(error){
+        console.error("removeUser/"+req.generic_id+" error:", error);
         res.status(400).send(error);
       });
     }
   },
-
 
   /**
   * expects post method
@@ -68,52 +58,52 @@ module.exports = {
       var rb = req.body;
       var parcel_gid, geom;
       if (rb.coordinates) {
-        console.log('coordinates received...');
+        console.log("coordinates received...");
         console.log(rb.coordinates[0]);
         console.log(rb.coordinates[1]);
-      } else {
-        console.log('coordinates missing');
-      }
-      // Get gid of parcel that contains given coordinates
-      utils.getParcelGid(rb.coordinates[0], rb.coordinates[1])
-      .then(function(result){
-        console.log('found parcel gid', result[0].gid);
-        return parcel_gid = result[0].gid;
-      })
-      // Get geometry of that parcel and compute convex hull of it
-      .then(utils.getParcelGeometryText)
-      .then(function(result){
-        return utils.convertToConvexHull(result[0].lot_geom)
-        .then(function(geom){
-          return utils.bufferPolygon(geom, 5);
+        // Get gid of parcel that contains given coordinates
+        utils.getParcelGid(rb.coordinates[0], rb.coordinates[1])
+        .then(function(result){
+          console.log('found parcel gid', result[0].gid);
+          return parcel_gid = result[0].gid;
         })
-        .then(function(geom){
-          return utils.setSRID(geom, 102243);
+        // Get geometry of that parcel and compute convex hull of it
+        .then(utils.getParcelGeometryText)
+        .then(function(result){
+          return utils.convertToConvexHull(result[0].lot_geom)
+          .then(function(geom){
+            return utils.bufferPolygon(geom, 5);
+          })
+          .then(function(geom){
+            return utils.setSRID(geom, 102243);
+          })
         })
-      })
-      // All the data is ready. Now inserts row to owned_parcel
-      .then(function(geom){
-        return utils.addParcelOwnership(rb.user_id, parcel_gid, geom, rb.restriction_start_time, rb.restriction_end_time);
-      })
-      // Prepare response package
-      .then(function(entry){
-        return utils.getParcelGeometryJSON(entry[0].parcel_gid, 'parcel_wgs84')
-        .then(function(lot_geom){
-          entry[0].lot_geom = JSON.parse(lot_geom[0].lot_geom);
-          return entry;
+        // All the data is ready. Now inserts row to owned_parcel
+        .then(function(geom){
+          return utils.addParcelOwnership(rb.user_id, parcel_gid, geom, rb.restriction_start_time, rb.restriction_end_time);
+        })
+        // Prepare response package
+        .then(function(entry){
+          return utils.getParcelGeometryJSON(entry[0].parcel_gid, 'parcel_wgs84')
+          .then(function(lot_geom){
+            entry[0].lot_geom = JSON.parse(lot_geom[0].lot_geom);
+            return entry;
+          });
+        })
+        .then(function(res_data){
+          console.log(res_data);
+          res.status(200).send(res_data);
+        })
+        .catch(function(error){
+          console.error("registerAddress error:", error);
+          res.status(400).send(error);
         });
-      })
-      .then(function(res_data){
-        console.log(res_data);
-        res.status(200).send(res_data);
-      })
-      .catch(function(error){
-        console.log(error);
-        res.status(400).send(error);
-      });
+      } else {
+        console.error("coordinates missing");
+        res.status(400).send("coordinates missing")
+      }
     }
   },
-
 
   /**
   * expects delete method
@@ -129,6 +119,7 @@ module.exports = {
         else res.status(400).send('Row with gid='+req.generic_id+' does not exist in owned_parcel. Deleted nothing');
       })
       .catch(function(error){
+        console.error("removeAddress/"+req.generic_id+" error:",error);
         res.status(400).send(error);
       });
     }
@@ -150,11 +141,11 @@ module.exports = {
         res.status(200).send(updatedEntry);
       })
       .catch(function(error){
+        console.error("updatePermission error:",error);
         res.status(400).send(error);
       });
     }
   },
-
 
   /**
   * expects post method
@@ -174,11 +165,11 @@ module.exports = {
         res.status(200).send(newEntry);
       })
       .catch(function(error){
+        console.error("setExemption error:", error);
         res.status(400).send(error);
       });
     }
   },
-
 
   /**
   * expects delete method
@@ -195,11 +186,11 @@ module.exports = {
         else res.status(400).send('No restriction_exemption row where id='+req.generic_id+'. Nothing deleted.');
       })
       .catch(function(error){
+        console.error("removeExemption/"+req.generic_id+" error:", error);
         res.status(400).send(error);
-      })
+      });
     }
   },
-
 
   /**
   * expects post method
@@ -218,11 +209,11 @@ module.exports = {
         res.status(200).send(newEntry);
       })
       .catch(function(error){
+        console.log("registerDrone error:", error);
         res.status(400).send(error);
       });
     }
   },
-
 
   /**
   * expects delete method
@@ -239,9 +230,9 @@ module.exports = {
         else res.status(400).send('Could not find drone '+req.generic_id+'. Nothing deleted');
       })
       .catch(function(error){
+        console.error("removeDrone/"+req.generic_id+" error:", error);
         res.status(400).send(error);
       });
     }
   }
-
 }
