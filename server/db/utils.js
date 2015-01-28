@@ -1,4 +1,4 @@
-var pg = require('./config.js');
+var pg = require('./testConfig.js');//var pg = require('./config.js');
 var st = require('knex-postgis')(pg);
 
 var BUFFER_OFFSET = 5; // 5 METERS
@@ -65,12 +65,19 @@ var setSRID = function(geometry, srid){
 * output: knex query that selects gid of Parcel that intersects with provided long lat point
 *         by geography calculations (slow, exact)
 */
-var getParcelGidByGeography = function(longitude, latitude){
-  var longitude=-122.023036, latitude=37.634351;
-  return pg.select('gid')
-  .from('parcel_wgs84')
-  .whereRaw("ST_Intersects(ST_GeographyFromText('SRID=4326;POINT("+longitude+" "+latitude+")'), lot_geom)");
-};
+// var getParcelGidByGeography = function(longitude, latitude){
+//   var longitude=-122.023036, latitude=37.634351;
+//   return pg.select('gid')
+//   .from('parcel_wgs84')
+//   .whereRaw("ST_Intersects(ST_GeographyFromText('SRID=4326;POINT("+longitude+" "+latitude+")'), lot_geom)");
+// }
+// var d1 = new Date;
+// getParcelGidByGeography(-122.023036, 37.634351).then(function(r){
+//   d1d = new Date;
+//   console.log(r);
+//   console.log('geog',(d1d-d1)+'ms');
+// });
+
 
 /**
 * input: long, lat
@@ -79,6 +86,27 @@ var getParcelGidByGeography = function(longitude, latitude){
 */
 var getParcelGid = function(longitude, latitude){
   return pg.select('gid')
+  .from('parcel')
+  .whereRaw("ST_Contains(lot_geom, ST_Transform(ST_GeometryFromText('POINT("+longitude+" "+latitude+")',4326), 102243))");
+};
+// var d2 = new Date;
+// getParcelGid(-122.023036, 37.634351)
+// .then(function(r){
+//   d2d = new Date;
+//   console.log(r);
+//   console.log('geom',(d2d-d2)+'ms');
+//   return r;
+// })
+// .then(function(r){
+//   return getParcelGeometry(r[0].gid)
+//   .then(function(geom){
+//     return {gid:r[0].gid, geom: geom[0].lot_geom}
+//   });
+// })
+// .then(console.log);
+
+var getAPNByGeography = function(longitude, latitude){
+  return pg.select(['apn','gid'])
   .from('parcel')
   .whereRaw("ST_Contains(lot_geom, ST_Transform(ST_GeometryFromText('POINT("+longitude+" "+latitude+")',4326), 102243))");
 };
