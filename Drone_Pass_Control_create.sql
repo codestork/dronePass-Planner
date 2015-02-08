@@ -40,13 +40,16 @@ CREATE TABLE drone_position (
 -- Table: flight_path
 CREATE TABLE flight_path (
     gid serial  NOT NULL,
-    drone_call_sign varchar(32)  NOT NULL,
+    drone_call_sign varchar(32) UNIQUE NOT NULL,
     drone_operator_id int NOT NULL DEFAULT 0, --drone_operator_id int  NOT NULL,
     flight_start timestamp  NOT NULL DEFAULT '-infinity'::timestamp without time zone CHECK (flight_start < flight_end),
     flight_end timestamp  NOT NULL DEFAULT 'infinity'::timestamp without time zone CHECK (flight_start < flight_end),
     CONSTRAINT flight_path_pk PRIMARY KEY (gid)
 );
 
+CREATE UNIQUE INDEX ON flight_path (
+    drone_call_sign
+);
 
 
 -- Table: flight_path_area

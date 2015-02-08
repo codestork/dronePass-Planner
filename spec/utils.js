@@ -1,6 +1,6 @@
 var path = require('path');
 var expect = require('chai').expect;
-var pg = require(path.join(__dirname, '..', './server/db/config.js'));
+var pg = require(path.join(__dirname, '..', './server/db/testConfig.js'));
 var st = require('knex-postgis')(pg);
 
 var utils = require(path.join(__dirname, '..', './server/db/utils.js'));
@@ -27,277 +27,79 @@ var getLandOwner = function(where){
 //  public | restriction_exemption | table | dronepass
 //  public | spatial_ref_sys       | table | dronepass
 
-var LAND_OWNER_ID_ADD = 23;
-var LAND_OWNER_ID_REMOVE = 24;
-var LAND_OWNER_ID_TEST = 25;
 var DRONE_TYPE = 'amazon';
 var INITIAL_DRONE_COUNT = -2;
 var DRONE_ID;
 var DRONE_OPERATOR_ID;
-var TIME_OUT = 250;
+var TIME_OUT = 750;
 var DRONE_OPERATOR_NAME = 'Bob';
 
 var registerAddress = function(land_owner_id, parcel_id, time_start, time_end) {
   utils.getParcelGeometryText(parcel_id)
   .then(function(result){
-    console.log(result);
     return utils.convertToConvexHull(result[0].lot_geom);
   })
   // All the data is ready. Now inserts row to owned_parcel
   .then(function(geom){
-    console.log(geom);
     utils.addParcelOwnership(land_owner_id, parcel_id, geom, time_start, time_end).exec(function(err, rows) {
-
     });
   });
+};
+
+var id54321 = 54321;
+var login54321 = 'test@test.test';
+var id65432 = 65432;
+var login65432 = 'test2@test2.test2';
+var id76543 = 76543;
+var login76543 = 'test3@test3.test3';
+var id87654 = 87654;
+var login87654 = 'test4@test4.test4';
+var id98765 = 98765;
+var login98765 = 'test5@test5.test5';
+var id1098765 = 1098765;
+var login1098765 = 'test6@test6.test6';
+
+var checkAndAddLandOwner = function(id, login) {
+  pg.select()
+  .from('land_owner')
+  .where({id:id})
+  .then(function(rows) {
+    result = rows;
+    if (rows.length === 0) {
+      console.log('successfully preppred for add data');
+      utils.addLandOwner(id, login, 1).returning('id').then(function(r){});
+    }
+  });
+};
+
+var checkAndRemoveLandOwner = function(id) {
+  pg.select()
+  .from('land_owner')
+  .where({id:id})
+  .then(function(rows) {
+    result = rows;
+    if (rows.length === 1) {
+      console.log('successfully preppred for add data');
+      utils.removeLandOwner(id).exec(function(err, rows) {});
+    }
+  });
+};
+
+var removeTestParcelOwnership = function(whereObj) {
+  return pg('owned_parcel')
+  .where(whereObj)
+  .delete();
 }
 
-describe('utils()', function () {
 
-  before(function(done) {
-    // requires a drone to be in database
-    var callSign = 'Test';//INSERT INTO drone (call_sign, drone_type, max_velocity) VALUES ('Test', 'Amazon', 10);
-    // requires a drone_operator to be in database
-    var drone_operator_id = 0;//INSERT INTO drone_operator (id, operator_name) VALUES (12345, 'Test');
-    // requires 3 land owners to be in database
-    // landOwnerIds : 12345, 23456, 34567
-    // INSERT INTO land_owner (id, login) VALUES (12345, 'yo@yo.yo');
-    // INSERT INTO land_owner (id, login) VALUES (23456, 'bo@bo.bo');
-    // INSERT INTO land_owner (id, login) VALUES (34567, 'mo@mo.mo');
-    // parcel ids : 328449, 328451, 328452
-    // requires a restricted parcel 328449
-    // requires a restricted parcel with an exemption 328451
-    // requires a parcel that doesn't have restrictions 328452
-    registerAddress(12345, 328449, '04:05:06', '10:05:06');
-    registerAddress(23456, 328451, null, null);
-    registerAddress(34567, 328452, '04:05:06', '10:05:06');
 
-    // runs before all tests in this block
-    //utils.removeLandOwner(15);
-    // pg('drone').count('id').then(function(c) {
-    //   INITIAL_DRONE_COUNT = parseInt(c[0].count);
-    // });
-    // utils.addLandOwner(LAND_OWNER_ID_REMOVE, 'yo@yo.yo', 1).then(function(r) {
-    // });
-    // utils.addDroneOperator(DRONE_OPERATOR_NAME).then(function(r) {
-    // });
-
-    // utils.addLandOwner(1, 'yo@yo.yo', 1).then(function(r) {
-    // });
-    var land_owner_id = 1,
-        restriction_start = '10:00:00',
-        restriction_end = '12:00:00';
-    console.log(283712);
-    // Get geometry of that parcel and compute convex hull of it
-    // utils.getParcelGeometryText(283712)
-    // .then(function(result){
-    //   return utils.convertToConvexHull(result[0].lot_geom);
-    // })
-    // // All the data is ready. Now inserts row to owned_parcel
-    // .then(function(hull_geom){
-    //   utils.addParcelOwnership(land_owner_id, 283712, hull_geom, restriction_start, restriction_end).exec(function(err, rows) {
-    //     console.log(rows);
-    //   });
-    // });
-
-    setTimeout(function() {
-      done();
-    }, TIME_OUT);
-
-  });
-
-  after(function(done){
-    // runs after all tests in this block
-    utils.removeLandOwner(LAND_OWNER_ID_ADD).exec(function(err, rows) {
-      utils.removeLandOwner(LAND_OWNER_ID_REMOVE).exec(function(err, rows) {
-        done();
-      })
-    });
-  });
-
+describe('get geometries as text', function() {
   it('exists getParcelGeometryJSON', function () {
     expect(utils.getParcelGeometryJSON).to.be.a('function');
   });
 
   it('exists getParcelGeometryText', function () {
     expect(utils.getParcelGeometryText).to.be.a('function');
-  });
-
-  it('exists getParcelGidByGeography', function () {
-    expect(utils.getParcelGidByGeography).to.be.a('function');
-  });
-  
-  it('exists getParcelGid', function () {
-    expect(utils.getParcelGid).to.be.a('function');
-  });
-
-  //****************************************************************
-  // setRestriction
-  //****************************************************************
-  it('exists setRestriction', function () {
-    expect(utils.setRestriction).to.be.a('function');
-  });
-
-  it('should update row in owned_parcel', function(done){
-    var start_time = '11:00:00', end_time= '15:00:00';
-    var resultStart;
-    var resultEnd;
-    var oldStart;
-    var oldEnd;
-    // this relies on the existence of an owned_parcel with an association to parcel_gid 1
-    utils.getRestriction({gid:1}).exec(function(err, restriction_window) {
-      console.log(restriction_window);
-      if (err) {
-        expect(err).to.equal(undefined);
-        done();
-        return;
-      }
-      oldStart = restriction_window[0].restriction_start;
-      oldEnd = restriction_window[0].restriction_end;
-      utils.setRestriction(328452, start_time,end_time)
-      .then(function(updated_entry){
-        console.log(updated_entry);// [ { gid: 1,
-    // land_owner_id: 668,
-    // parcel_gid: 328452,
-    // restriction_start: '05:00:00',
-    // restriction_end: '10:00:00' } ]
-        resultStart = updated_entry[0].restriction_start;
-        resultEnd = updated_entry[0].restriction_end;
-      });
-    });
-
-    setTimeout(function(){
-      expect(start_time).to.equal(resultStart);
-      expect(end_time).to.equal(resultEnd);
-      done();
-      utils.setRestriction(1, oldStart, oldEnd).exec(function(err, r) {
-      });
-    }, TIME_OUT);
-  });
-
-  it('exists addLandOwner', function () {
-    expect(utils.addLandOwner).to.be.a('function');
-  });
-
-  it('exists removeLandOwner', function () {
-    expect(utils.removeLandOwner).to.be.a('function');
-  });
-
-  //****************************************************************
-  // addParcelOwnership
-  //****************************************************************
-  it('exists addParcelOwnership', function () {
-    expect(utils.addParcelOwnership).to.be.a('function');
-  });
-
-  xit('should add row into addParcelOwnership', function(done){
-    var result;
-    var land_owner_id = LAND_OWNER_ID_TEST,
-        parcel_gid = 1,
-        hull_geom = null,
-        restriction_start = '10:00:00',
-        restriction_end = '10:00:10';
-
-    utils.addParcelOwnership(land_owner_id, parcel_gid, hull_geom, restriction_start, restriction_end)
-    .then(function(entry){
-      console.log(entry);
-      result = entry;
-    })
-
-    setTimeout(function (){
-      expect(result.length);
-      expect(result[0].land_owner_id).to.equal(land_owner_id);
-      expect(result[0].parcel_gid).to.equal(parcel_gid);
-      expect(result[0].hull_geom).to.equal(undefined);
-      expect(result[0].restriction_height).to.equal(0);
-      expect(result[0].restriction_start).to.equal(restriction_start);
-      expect(result[0].restriction_end).to.equal(restriction_end);
-      // this is troubling... need to clean up everything
-      utils.removeParcelOwnership(result[0].gid)
-      .then(function(){
-        done();
-      });
-    }, TIME_OUT);
-  });
-
-  //****************************************************************
-  // removeParcelOwnership
-  //****************************************************************
-  it('exists removeParcelOwnership', function () {
-    expect(utils.removeParcelOwnership).to.be.a('function');
-  });
-
-  xit('should delete row by specified gid, removeParcelOwnership', function(done) {
-    var rows_deleted;
-    utils.addParcelOwnership(1,1,null,null,null)
-    .then(function(entry){
-      return utils.removeParcelOwnership(entry[0].gid)
-    })
-    .then(function(count){
-      rows_deleted = count;
-    })
-
-    setTimeout(function () {
-      expect(rows_deleted).to.equal(1);
-      done();
-    }, TIME_OUT);
-  });
-
-  //****************************************************************
-  // getRestriction
-  //****************************************************************
-  xit('exists getRestriction', function() {
-    expect(utils.getRestricted).to.be.a('function');
-  });
-
-
-  //****************************************************************
-  // setExemption & getExemption
-  //****************************************************************
-  it('exists addRestrictionExemption', function() {
-    expect(utils.addRestrictionExemption).to.be.a('function');
-  });
-
-  it('exists removeRestrictionExemption', function() {
-    expect(utils.removeRestrictionExemption).to.be.a('function');
-  });
-
-  xit('should insert row into restriction_exemption and delete row', function(done) {
-    
-    setTimeout(function(){
-      done();
-    }, TIME_OUT);
-  });
-
-
-
-
-  it('exists addDrone', function () {
-    expect(utils.addDrone).to.be.a('function');
-  });
-
-  it('exists addDroneOperator', function () {
-    expect(utils.addDroneOperator).to.be.a('function');
-  });
-
-  it('exists removeDrone', function () {
-    expect(utils.removeDrone).to.be.a('function');
-  });
-
-  it('exists removeDroneOperator', function () {
-    expect(utils.removeDroneOperator).to.be.a('function');
-  });
-
-  it('should get parcel by lon lat, getParcelGid', function(done) {
-    var result = {};
-    utils.getParcelGid(-122.023036, 37.634351).then(function(r){
-      result = r;
-    });
-
-    setTimeout(function () {
-      expect(result[0].gid).to.equal(77676);
-      done();
-    }, TIME_OUT);
   });
 
   it('should get parcel by lon lat, getParcelGeometryJSON', function(done) {
@@ -312,29 +114,77 @@ describe('utils()', function () {
       expect(result[0].lot_geom).to.equal(str);
       done();
     }, TIME_OUT);
+  });  
+});
+
+describe('getParcelGid', function() {
+  it('exists getParcelGid', function () {
+    expect(utils.getParcelGid).to.be.a('function');
+  });
+
+  it('should get parcel by lon lat, getParcelGid', function(done) {
+    var result = {};
+    utils.getParcelGid(-122.023036, 37.634351).then(function(r){
+      result = r;
+    });
+
+    setTimeout(function () {
+      expect(result[0].gid).to.equal(77676);
+      done();
+    }, TIME_OUT);
+  });  
+});
+
+describe('adding and removing land owners accounts', function() {
+  before(function(done){
+    // this needs to be replaced with a clean data set in a test database
+    checkAndRemoveLandOwner(id76543);
+    checkAndAddLandOwner(id87654, login87654);
+
+    setTimeout(function () {
+      done();
+    }, TIME_OUT);
+  });
+
+  after(function(done){
+    // this needs to be replaced with a clean data set in a test database
+    checkAndRemoveLandOwner(id76543);
+    checkAndRemoveLandOwner(id87654);
+
+    setTimeout(function () {
+      done();
+    }, TIME_OUT);
+  });
+
+  it('exists addLandOwner', function () {
+    expect(utils.addLandOwner).to.be.a('function');
+  });
+
+  it('exists removeLandOwner', function () {
+    expect(utils.removeLandOwner).to.be.a('function');
   });
 
   it('should create a land lowner', function(done) {
     var result = {};
 
-    utils.addLandOwner(LAND_OWNER_ID_ADD, 'yo@yo.yo', 1).returning('id').then(function(r) {
-      getLandOwner({id:LAND_OWNER_ID_ADD}).then(function(rows) {
+    utils.addLandOwner(id76543, login76543, 1).returning('id').then(function(r) {
+      getLandOwner({id:id76543}).then(function(rows) {
         result = rows;
       });
     });
     
     setTimeout(function () {
-      expect(result[0].id).to.equal(LAND_OWNER_ID_ADD);
+      expect(result[0].id).to.equal(id76543);
       expect(result.length).to.equal(1);
-      expect(result[0].login).to.equal('yo@yo.yo');
+      expect(result[0].login).to.equal(login76543);
       done();
     }, TIME_OUT);
   });
 
   it('should remove a land owner', function(done) {
     var result = {};
-    utils.removeLandOwner(LAND_OWNER_ID_REMOVE).exec(function() {
-      getLandOwner({id:LAND_OWNER_ID_REMOVE}).then(function(rows) {
+    utils.removeLandOwner(id87654).exec(function() {
+      getLandOwner({id:id87654}).then(function(rows) {
         result = rows;
       });
     }).catch(function(error) {
@@ -346,22 +196,193 @@ describe('utils()', function () {
       done();
     }, TIME_OUT);
   });
+});
+
+describe('adding removing and modifying parcel ownership information', function() {
+  var restriction_start = '10:00:00';
+  var restriction_end = '10:00:10';
+  before(function(done) {
+    // this needs to be replaced with a clean data set in a test database
+    removeTestParcelOwnership({'parcel_gid':1}).exec(function(err, rows) {
+      checkAndRemoveLandOwner(id98765);
+    });
+    checkAndAddLandOwner(id98765, login98765);
+
+    setTimeout(function () {
+      done();
+    }, TIME_OUT);    
+  });
+
+  after(function(done) {
+    // this needs to be replaced with a clean data set in a test database    
+    removeTestParcelOwnership({'land_owner_id':id98765}).exec(function(err, rows) {
+      checkAndRemoveLandOwner(id98765);
+    });
+    
+    setTimeout(function () {
+      done();
+    }, TIME_OUT);    
+  })
+
+  it('exists addParcelOwnership', function () {
+    expect(utils.addParcelOwnership).to.be.a('function');
+  });
+
+  it('exists setRestriction', function () {
+    expect(utils.setRestriction).to.be.a('function');
+  });
+
+  it('exists removeParcelOwnership', function () {
+    expect(utils.removeParcelOwnership).to.be.a('function');
+  });  
+
+  // it('exists getRestriction', function() {
+  //   expect(utils.getRestricted).to.be.a('function');
+  // });  
+
+  it('should add row into addParcelOwnership', function(done){
+    var result;
+    var parcel_gid = 1;
+    var hull_geom = null;
+
+    utils.addParcelOwnership(id98765, parcel_gid, hull_geom, restriction_start, restriction_end)
+    .then(function(entry){
+      result = entry;
+    });
+
+    setTimeout(function (){
+      expect(result.length);
+      expect(result[0].land_owner_id).to.equal(id98765);
+      expect(result[0].parcel_gid).to.equal(parcel_gid);
+      expect(result[0].hull_geom).to.equal(undefined);
+      expect(result[0].restriction_height).to.equal(0);
+      expect(result[0].restriction_start).to.equal(restriction_start);
+      expect(result[0].restriction_end).to.equal(restriction_end);
+      // this is troubling... need to clean up everything
+      utils.removeParcelOwnership(result[0].gid)
+      .then(function(){
+        done();
+      });
+    }, TIME_OUT);
+  });
+
+  it('should update row in owned_parcel', function(done){
+    var start_time = '11:00:00'
+    var end_time= '15:00:00';
+    var parcel_gid = 1;
+    var resultStart;
+    var resultEnd;
+    var oldStart;
+    var oldEnd;
+    // this relies on the existence of an owned_parcel with an association to parcel_gid 1
+    utils.addParcelOwnership(id98765, parcel_gid, hull_geom, restriction_start, restriction_end)
+    .then(function(entry){
+      oldStart = entry[0].restriction_start;
+      oldEnd = entry[0].restriction_end;
+      utils.setRestriction(gid, start_time,end_time)
+      .then(function(updated_entry){
+      // [ { gid: 1,
+      // land_owner_id: 668,
+      // parcel_gid: 328452,
+      // restriction_start: '05:00:00',
+      // restriction_end: '10:00:00' } ]
+        resultStart = updated_entry[0].restriction_start;
+        resultEnd = updated_entry[0].restriction_end;
+      });
+    })
+    .then(function(entry) {
+
+    })
+    pg.select()
+    .from(owned_parcel)
+    .where({gid:1}).exec(function(err, restriction_window) {
+      if (err) {
+        expect(err).to.equal(undefined);
+        done();
+        return;
+      }
+
+    });
+
+    setTimeout(function(){
+      expect(start_time).to.equal(resultStart);
+      expect(end_time).to.equal(resultEnd);
+      done();
+      utils.setRestriction(1, oldStart, oldEnd).exec(function(err, r) {
+      });
+    }, TIME_OUT);
+  });  
+
+  it('should delete row by specified gid, removeParcelOwnership', function(done) {
+    var rows_deleted;
+    
+    utils.addParcelOwnership(id98765,2,null,restriction_start, restriction_end)
+    .then(function(entry){
+      return utils.removeParcelOwnership(entry[0].gid)
+    })
+    .then(function(count){
+      rows_deleted = count;
+    })
+
+    setTimeout(function () {
+      expect(rows_deleted).to.equal(1);
+      done();
+    }, TIME_OUT);
+  });
+});
+
+
+describe('restriction exemptions', function() {
+  it('exists addRestrictionExemption', function() {
+    expect(utils.addRestrictionExemption).to.be.a('function');
+  });
+
+  it('exists removeRestrictionExemption', function() {
+    expect(utils.removeRestrictionExemption).to.be.a('function');
+  });
+
+  xit('should insert row into restriction_exemption and delete row', function(done) {
+    setTimeout(function(){
+      done();
+    }, TIME_OUT);
+  });  
+});
+
+
+
+describe('add and remove drone', function() {
+  it('exists addDrone', function () {
+    expect(utils.addDrone).to.be.a('function');
+  });
+
+  it('exists removeDrone', function () {
+    expect(utils.removeDrone).to.be.a('function');
+  });
 
   it('should add drone', function(done) {
+    var beforeCount;
+    var afterCount;
     var count = 0;
     var droneId = -1;
     
-    utils.addDrone(call_sign, DRONE_TYPE, 4)
-    .returning('id')
-    .then(function(r) {
-      DRONE_ID = r[0];
-      pg('drone').count('id').then(function(c) {
-        count = c;
-      });
+    pg('drone')
+    .count('call_sign')
+    .then(function(c) {
+      console.log(c);
+      beforeCount = c;
+      utils.addDrone(call_sign, DRONE_TYPE, 4)
+      .returning('call_sign')
+      .then(function(r) {
+        DRONE_ID = r[0];
+        pg('drone').count('call_sign').then(function(c) {
+          console.log(c);
+          afterCount = c;
+        });
+      });      
     });
 
     setTimeout(function() {
-      expect(parseInt(count[0].count)).to.equal(INITIAL_DRONE_COUNT + 1);
+      expect(parseInt(afterCount[0].count)).to.equal(beforeCount[0].count + 1);
       done();
     }, TIME_OUT);
   });
@@ -371,10 +392,10 @@ describe('utils()', function () {
     var countBefore = -1;
     var countAfter = -1;
     
-    pg('drone').count('id').then(function(c) {
+    pg('drone').count('call_sign').then(function(c) {
       countBefore = parseInt(c[0].count);
       utils.removeDrone(DRONE_ID).exec(function() {
-        pg('drone').count('id').then(function(c) {
+        pg('drone').count('call_sign').then(function(c) {
           countAfter = parseInt(c[0].count);
         });
       });
@@ -384,6 +405,16 @@ describe('utils()', function () {
       expect(parseInt(countBefore - 1)).to.equal(countAfter);
       done();
     }, TIME_OUT);
+  });  
+});
+
+describe('add and remove drone operator', function() {
+  it('exists addDroneOperator', function () {
+    expect(utils.addDroneOperator).to.be.a('function');
+  });
+
+  it('exists removeDroneOperator', function () {
+    expect(utils.removeDroneOperator).to.be.a('function');
   });
 
   it('should add drone operator', function(done) {
@@ -413,5 +444,60 @@ describe('utils()', function () {
       expect(parseInt(countBefore - 1)).to.equal(countAfter);
       done();
     }, TIME_OUT);
+  });  
+});
+
+
+describe('utils()', function () {
+
+  before(function(done) {
+    // requires a drone to be in database
+    var callSign = 'Test';//INSERT INTO drone (call_sign, drone_type, max_velocity) VALUES ('Test', 'Amazon', 10);
+    // requires a drone_operator to be in database
+    var drone_operator_id = 0;//INSERT INTO drone_operator (id, operator_name) VALUES (12345, 'Test');
+    // requires 3 land owners to be in database
+    // landOwnerIds : 12345, 23456, 34567
+    // INSERT INTO land_owner (id, login) VALUES (12345, 'yo@yo.yo');
+    // INSERT INTO land_owner (id, login) VALUES (23456, 'bo@bo.bo');
+    // INSERT INTO land_owner (id, login) VALUES (34567, 'mo@mo.mo');
+    // parcel ids : 328449, 328451, 328452
+    // requires a restricted parcel 328449
+    // requires a restricted parcel with an exemption 328451
+    // requires a parcel that doesn't have restrictions 328452
+    registerAddress(12345, 70371, '04:05:06', '10:05:06');
+    registerAddress(23456, 70199, null, null);
+    registerAddress(34567, 70640, '04:05:06', '10:05:06');
+
+    // runs before all tests in this block
+    //utils.removeLandOwner(15);
+    // pg('drone').count('id').then(function(c) {
+    //   INITIAL_DRONE_COUNT = parseInt(c[0].count);
+    // });
+    // utils.addLandOwner(LAND_OWNER_ID_REMOVE, 'yo@yo.yo', 1).then(function(r) {
+    // });
+    // utils.addDroneOperator(DRONE_OPERATOR_NAME).then(function(r) {
+    // });
+
+    // utils.addLandOwner(1, 'yo@yo.yo', 1).then(function(r) {
+    // });
+    // var land_owner_id = 1,
+    //     restriction_start = '10:00:00',
+    //     restriction_end = '12:00:00';
+    // Get geometry of that parcel and compute convex hull of it
+    // utils.getParcelGeometryText(283712)
+    // .then(function(result){
+    //   return utils.convertToConvexHull(result[0].lot_geom);
+    // })
+    // // All the data is ready. Now inserts row to owned_parcel
+    // .then(function(hull_geom){
+    //   utils.addParcelOwnership(land_owner_id, 283712, hull_geom, restriction_start, restriction_end).exec(function(err, rows) {
+    //     console.log(rows);
+    //   });
+    // });
+
+    setTimeout(function() {
+      done();
+    }, TIME_OUT);
+
   });
 });
